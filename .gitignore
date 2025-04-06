@@ -1,0 +1,6 @@
+build/
+json/
+.vscode/
+env.sh
+json/
+dump/

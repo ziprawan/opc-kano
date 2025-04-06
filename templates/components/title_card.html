@@ -1,0 +1,70 @@
+{{ define "components/title_card.html" }}
+<div
+  class="bg-primary/20 hover:bg-primary/40 dark:hover:bg-primary/10 transition-colors py-2 px-5 rounded-xl w-full flex justify-between gap-5 select-none"
+>
+  <span class="flex gap-3 w-full items-center">
+    <input
+      class="{{ if .Claimable }}cursor-pointer{{ end }}"
+      id="{{ .Title.ID }}"
+      name="title_{{ .Title.ID }}"
+      type="checkbox"
+      {{
+      if
+      not
+      .Title.Claimable
+      }}
+      disabled
+      {{
+      end
+      }}
+      {{
+      if
+      .Title.IsHolding
+      }}
+      checked
+      {{
+      end
+      }}
+    />
+    <label class="py-3 h-full w-full {{ if .Title.Claimable }}cursor-pointer{{ end }}" for="{{ .Title.ID }}"
+      >{{ .Title.Name }}</label
+    >
+  </span>
+  <a
+    title="See list of holders of title: {{ .Name }}"
+    href="/user/titles/{{ .GroupID }}/{{ .Title.ID }}/holders"
+    class="flex gap-2 cursor-pointer items-center"
+  >
+    <span>
+      <svg width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <title>Holder count icon</title>
+        <g>
+          <path
+            d="M17 20C17 18.3431 14.7614 17 12 17C9.23858 17 7 18.3431 7 20M21 17.0004C21 15.7702 19.7659 14.7129 18 14.25M3 17.0004C3 15.7702 4.2341 14.7129 6 14.25M18 10.2361C18.6137 9.68679 19 8.8885 19 8C19 6.34315 17.6569 5 16 5C15.2316 5 14.5308 5.28885 14 5.76389M6 10.2361C5.38625 9.68679 5 8.8885 5 8C5 6.34315 6.34315 5 8 5C8.76835 5 9.46924 5.28885 10 5.76389M12 14C10.3431 14 9 12.6569 9 11C9 9.34315 10.3431 8 12 8C13.6569 8 15 9.34315 15 11C15 12.6569 13.6569 14 12 14Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </g>
+      </svg>
+    </span>
+    <span>{{ .Title.HolderCount }}</span>
+  </a>
+  {{ if .IsAdmin }}
+  <a
+    title="Edit title for {{ .Title.Name }}"
+    href="/user/titles/{{ .GroupID }}/{{ .Title.ID }}/edit"
+    class="flex items-center cursor-pointer"
+  >
+    <span title="Edit title for {{ .Title.Name }}">
+      <svg width="1.5rem" height="1.5rem" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 0L16 3L9 10H6V7L13 0Z" fill="currentColor" />
+        <path d="M1 1V15H15V9H13V13H3V3H7V1H1Z" fill="currentColor" />
+        <title>Edit title for {{ .Title.Name }}</title>
+      </svg>
+    </span>
+  </a>
+  {{ end }}
+</div>
+{{ end }}

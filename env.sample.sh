@@ -1,0 +1,5 @@
+export SESSION_NAME=""
+export DATABASE_URL=""
+export OWNER_JID=""
+export JWT_SECRET=""
+export CONFESS_TARGET=""

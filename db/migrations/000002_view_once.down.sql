@@ -1,0 +1,3 @@
+BEGIN;
+DROP TABLE IF EXISTS request_view_once;
+COMMIT;

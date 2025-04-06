@@ -1,0 +1,43 @@
+{{ define "home/index.html" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>[Dev] OPC Bot | {{ .title }}</title>
+    <link rel="icon" type="image/webp" href="/images/favicon.webp" />
+    <link href="/css/generated-tailwind.css" rel="stylesheet" />
+  </head>
+  <body class="bg-white text-black dark:bg-[#0f172a] dark:text-[#e2e8f0]">
+    {{ template "components/navbar.html" .navbar }}
+    <!-- Real content -->
+    <div class="max-h-[calc(100vh-6.5rem)] py-5 overflow-auto space-y-3">
+      <header>
+        <h1 class="text-center font-bold text-3xl">OPC Dashboard</h1>
+        <p class="text-center">{{ .navbar.name }}</p>
+      </header>
+      <div class="px-5 flex justify-center">
+        <div class="max-w-[768px] grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          <!-- <div class="border-b border-black pb-4 dark:border-[#334155]">
+            <a href="/user/confess" class="space-y-1">
+              <h2 class="font-semibold underline">Confess</h2>
+              <p class="text-sm text-slate-500 text-justify dark:text-[#94a3b8]">
+                Pilih ke grup apa saja confess mu akan terkirim :D
+              </p>
+            </a>
+          </div> -->
+          <div class="border-b border-black pb-4 dark:border-[#334155]">
+            <a href="/user/titles" class="space-y-1">
+              <h2 class="font-semibold underline">Ambil Title</h2>
+              <p class="text-sm text-slate-500 text-justify dark:text-[#94a3b8]">
+                "title" ini tidak lain adalah hal yang sama dengan "role" di platform Discord.
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{ template "components/footer.html" .}}
+  </body>
+</html>
+{{ end }}

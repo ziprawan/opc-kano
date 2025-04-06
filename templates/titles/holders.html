@@ -1,0 +1,139 @@
+{{ define "titles/holders.html" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>[Dev] OPC Bot | {{ .title }}</title>
+    <link rel="icon" type="image/webp" href="/images/favicon.webp" />
+    <link href="/css/generated-tailwind.css" rel="stylesheet" />
+  </head>
+  <body class="bg-white text-black dark:bg-[#0f172a] dark:text-[#e2e8f0]">
+    {{template "components/navbar.html" .navbar}}
+    <!-- Real content -->
+    <div class="max-h-[calc(100vh-6.5rem)] py-5 overflow-auto space-y-3">
+      <header>
+        <h1 class="text-center font-bold text-3xl">Ambil Title</h1>
+        <p class="text-center">Title: {{ .TitleName }}</p>
+        <p class="text-center">{{ .navbar.name }} ({{ .group.MemberRole }})</p>
+      </header>
+      <div class="px-5 flex flex-col items-center gap-3">
+        <!-- Save button -->
+        <div class="w-full max-w-[600px]">
+          {{ if .IsAdmin }}
+          <button
+            data-btn="save_title"
+            class="px-5 py-2 bg-primary/20 hover:bg-primary/40 dark:hover:bg-primary/10 transition-colors rounded-md cursor-pointer"
+          >
+            Simpan
+          </button>
+          {{ end }}
+        </div>
+
+        <!-- Save status state -->
+        <div id="error_msg" class="text-red-400 font-semibold"></div>
+
+        <!-- Tab -->
+        <div class="flex gap-5">
+          <button data-tab="holder" class="hover:border-solid select-none cursor-pointer py-2 border-b border-slate-500">
+            Pemegang
+          </button>
+          <button
+            data-tab="nonholder"
+            class="hover:border-solid select-none cursor-pointer py-2 border-b border-slate-500 border-none"
+          >
+            Bukan pemegang
+          </button>
+        </div>
+
+        <!-- Holder list -->
+        <div data-content="holder" class="max-w-[600px] space-y-3 pt-4 w-full">
+          {{ range .Holders }} {{ if and .IsHolding.Valid .IsHolding.Bool }} {{ template "components/holder_card.html" dict
+          "Holder" . "IsAdmin" $.IsAdmin }} {{ end }} {{ end }}
+        </div>
+        <div data-content="nonholder" class="max-w-[600px] space-y-3 pt-4 w-full hidden">
+          {{ range .Holders }} {{ if not (and .IsHolding.Valid .IsHolding.Bool) }} {{ template "components/holder_card.html"
+          dict "Holder" . "IsAdmin" $.IsAdmin }} {{ end }} {{ end }}
+        </div>
+      </div>
+    </div>
+    {{ template "components/footer.html" .}}
+    <script>
+      let tim = null;
+      document.querySelectorAll("[data-tab]").forEach((elem) =>
+        elem.addEventListener("click", () => {
+          const val = elem.attributes["data-tab"].value;
+          const sel = document.querySelectorAll(`[data-content]`);
+
+          sel.forEach((s) => {
+            const v = s.attributes["data-content"].value;
+            if (v === val) {
+              s.classList.remove("hidden");
+            } else {
+              s.classList.add("hidden");
+            }
+          });
+
+          document.querySelectorAll("[data-tab]").forEach((e) => {
+            const v = e.attributes["data-tab"].value;
+            if (v === val) {
+              e.classList.remove("border-none");
+            } else {
+              e.classList.add("border-none");
+            }
+          });
+        })
+      );
+
+      document.querySelectorAll('button[data-btn="save_title"]').forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const setStatus = (msg) => {
+            document.querySelectorAll("#error_msg").forEach((elm) => {
+              elm.innerText = msg;
+            });
+          };
+          const participant_ids = [];
+          document.querySelectorAll('input[name^="participant_"]').forEach((inp) => {
+            if (inp.type !== "checkbox") return;
+            if (inp.checked !== true) return;
+
+            const val = inp.attributes["name"].value.replace("participant_", "");
+            participant_ids.push(parseInt(val));
+          });
+
+          fetch(document.location.href, {
+            method: "POST",
+            body: JSON.stringify({ participant_ids }),
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          })
+            .then((resp) => {
+              return resp.json();
+            })
+            .then((json) => {
+              if (json.code !== 200) {
+                setStatus(json.description);
+              } else {
+                setStatus("Berhasil!");
+              }
+            })
+            .catch((err) => {
+              setStatus(err.toString());
+            })
+            .finally(() => {
+              if (tim) {
+                clearTimeout(tim);
+              }
+
+              tim = setTimeout(() => {
+                setStatus("");
+              }, 5000);
+            });
+        });
+      });
+    </script>
+  </body>
+</html>
+{{ end }}

@@ -1,0 +1,8 @@
+BEGIN;
+ALTER TABLE IF EXISTS contact
+ADD COLUMN login_request_id TEXT;
+ALTER TABLE IF EXISTS contact
+ADD COLUMN login_expiration_date TIMESTAMP WITH TIME ZONE;
+ALTER TABLE IF EXISTS contact
+ADD COLUMN login_redirect TEXT;
+COMMIT;

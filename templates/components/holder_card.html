@@ -1,0 +1,31 @@
+{{ define "components/holder_card.html" }}
+<div
+  class="bg-primary/20 hover:bg-primary/40 dark:hover:bg-primary/10 transition-colors py-2 px-5 rounded-xl w-full flex justify-between gap-5 select-none"
+>
+  {{ if .IsAdmin }}
+  <span class="flex gap-3 w-full items-center">
+    <input
+      class="cursor-pointer"
+      id="{{ .Holder.ParticipantID }}"
+      name="participant_{{ .Holder.ParticipantID }}"
+      type="checkbox"
+      {{
+      if
+      and
+      .Holder.IsHolding.Valid
+      .Holder.IsHolding.Bool
+      }}
+      checked
+      {{
+      end
+      }}
+    />
+    <label class="py-3 h-full w-full cursor-pointer" for="{{ .Holder.ParticipantID }}">{{ .Holder.Name }}</label>
+  </span>
+  {{ else }}
+  <span class="flex gap-3 w-full items-center">
+    <p class="py-3 h-full w-full cursor-pointer">{{ .Holder.Name }}</p>
+  </span>
+  {{ end }}
+</div>
+{{ end }}

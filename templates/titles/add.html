@@ -1,0 +1,110 @@
+{{ define "titles/add.html" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>[Dev] OPC Bot | {{ .title }}</title>
+    <link rel="icon" type="image/webp" href="/images/favicon.webp" />
+    <link href="/css/generated-tailwind.css" rel="stylesheet" />
+  </head>
+  <body class="bg-white text-black dark:bg-[#0f172a] dark:text-[#e2e8f0]">
+    {{template "components/navbar.html" .navbar}}
+    <!-- Real content -->
+    <div class="max-h-[calc(100vh-6.5rem)] py-5 overflow-auto space-y-3">
+      <header>
+        <h1 class="text-center font-bold text-3xl">Ambil Title</h1>
+        <p class="text-center">Grup: {{ .group.Name }}</p>
+        <p class="text-center">{{ .navbar.name }} ({{ .group.MemberRole }})</p>
+      </header>
+      <div class="px-5 flex flex-col justify-center items-center gap-3">
+        <!-- Input name form -->
+        <div class="w-full flex gap-3 max-w-[600px] items-center">
+          <label class="shrink-0" for="title_name">Nama title: </label>
+          <input
+            class="border border-black dark:border-[#334155] py-2 px-4 w-full focus:rounded-md"
+            placeholder="Masukkan nama title, hanya menerima alfanumerik."
+            name="title_name"
+            id="title_name"
+          />
+        </div>
+
+        <!-- Title options -->
+        <div class="space-y-2 w-full max-w-[600px]">
+          <div class="space-x-3">
+            <input id="claimable" name="claimable" type="checkbox" checked />
+            <label for="claimable">Apakah title ini bisa diambil dengan bebas?</label>
+          </div>
+        </div>
+
+        <!-- Save status state -->
+        <div id="error_msg" class="text-red-400 font-semibold"></div>
+
+        <!-- Save button -->
+        <div class="flex justify-center gap-5 w-full max-w-[600px]">
+          <button
+            data-btn="save_title"
+            class="px-5 py-2 bg-primary/20 hover:bg-primary/40 dark:hover:bg-primary/10 transition-colors rounded-md cursor-pointer"
+          >
+            Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+    {{ template "components/footer.html" .}}
+    <script>
+      let tim = null;
+      document.querySelectorAll('button[data-btn="save_title"]').forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const setStatus = (msg) => {
+            document.querySelectorAll("#error_msg").forEach((elm) => {
+              elm.innerText = msg;
+            });
+          };
+          const data = { title_name: "", claimable: false };
+          const title_name_element = document.querySelector(`input[name="title_name"]`);
+          if (title_name_element && title_name_element.nodeType === 1) {
+            data.title_name = title_name_element.value;
+          }
+
+          const claimable_element = document.querySelector(`input[name="claimable"]`);
+          if (claimable_element && claimable_element.nodeType === 1) {
+            data.claimable = claimable_element.checked;
+          }
+
+          fetch(document.location.href, {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          })
+            .then((resp) => {
+              return resp.json();
+            })
+            .then((json) => {
+              if (json.code !== 200) {
+                setStatus(json.description);
+              } else {
+                setStatus("Berhasil!");
+              }
+            })
+            .catch((err) => {
+              setStatus(err.toString());
+            })
+            .finally(() => {
+              if (tim) {
+                clearTimeout(tim);
+              }
+
+              tim = setTimeout(() => {
+                setStatus("");
+              }, 5000);
+            });
+        });
+      });
+    </script>
+  </body>
+</html>
+{{ end }}
