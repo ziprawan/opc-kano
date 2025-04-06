@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nopi/internals/database"
-	"nopi/internals/utils/account"
+	"kano/internals/database"
+	"kano/internals/utils/account"
 	"time"
 
 	"go.mau.fi/whatsmeow"

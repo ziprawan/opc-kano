@@ -2,8 +2,8 @@ package routes
 
 import (
 	"fmt"
-	"nopi/middleware"
-	user_titles "nopi/web_handlers/user/titles"
+	"kano/middleware"
+	user_titles "kano/web_handlers/user/titles"
 
 	"github.com/gin-gonic/gin"
 )

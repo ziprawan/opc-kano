@@ -2,7 +2,7 @@ package message
 
 import (
 	"context"
-	projectconfig "nopi/internals/project_config"
+	projectconfig "kano/internals/project_config"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"

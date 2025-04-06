@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"nopi/internals/database"
-	"nopi/structs"
+	"kano/internals/database"
+	"kano/structs"
 	"slices"
 	"strings"
 

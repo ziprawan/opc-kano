@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"nopi/internals/database"
-	"nopi/structs"
+	"kano/internals/database"
+	"kano/structs"
 	"slices"
 	"strings"
 

@@ -42,11 +42,11 @@ type Stream struct {
 
 func appendEXIF(src []byte, publisher string) []byte {
 	if len(publisher) == 0 {
-		publisher = "Nopi"
+		publisher = "Kano"
 	}
 	metadata := StickerMetadata{
-		StickerPackID:        proto.String("nopi_sticker_packs"),
-		StickerPackName:      proto.String("Nopi Bot"),
+		StickerPackID:        proto.String("kano_sticker_packs"),
+		StickerPackName:      proto.String("Kano Bot"),
 		StickerPackPublisher: proto.String(publisher),
 		Emoji:                []string{},
 	}

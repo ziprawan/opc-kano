@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"nopi/internals/database"
-	"nopi/internals/utils/account"
+	"kano/internals/database"
+	"kano/internals/utils/account"
 	"time"
 
 	"go.mau.fi/whatsmeow"

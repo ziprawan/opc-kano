@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"kano/internals/database"
+	"kano/internals/utils/account"
+	"kano/internals/utils/messageutils"
 	"log"
-	"nopi/internals/database"
-	"nopi/internals/utils/account"
-	"nopi/internals/utils/messageutils"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"

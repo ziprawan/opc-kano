@@ -2,13 +2,13 @@ package account
 
 import (
 	"errors"
-	"nopi/internals/database"
+	"kano/internals/database"
 	"sync"
 
 	"go.mau.fi/whatsmeow/types"
 )
 
-type NopiAccount struct {
+type KanoAccount struct {
 	ID       int64
 	Name     string
 	JID      *types.JID
@@ -16,21 +16,21 @@ type NopiAccount struct {
 }
 
 var (
-	accInstance *NopiAccount
+	accInstance *KanoAccount
 	initErr     error
 	once        sync.Once
 
 	ErrAccNotFound = errors.New("cannot find account at your database")
 )
 
-func InitAccount(accountName string) *NopiAccount {
+func InitAccount(accountName string) *KanoAccount {
 	once.Do(func() {
 		var (
-			acc *NopiAccount
+			acc *KanoAccount
 			jid string
 		)
 
-		acc = &NopiAccount{}
+		acc = &KanoAccount{}
 
 		db := database.GetDB()
 		stmt := db.QueryRow("SELECT * FROM account WHERE name = $1", accountName)
@@ -71,7 +71,7 @@ func SaveAccount(accountName string, jid *types.JID) error {
 		return err
 	}
 
-	accInstance = &NopiAccount{
+	accInstance = &KanoAccount{
 		ID:   accID,
 		Name: accountName,
 		JID:  jid,
@@ -86,6 +86,6 @@ func SetPushName(pushName string) {
 	}
 }
 
-func GetData() (*NopiAccount, error) {
+func GetData() (*KanoAccount, error) {
 	return accInstance, initErr
 }

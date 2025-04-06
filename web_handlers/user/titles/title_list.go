@@ -2,8 +2,8 @@ package user_titles
 
 import (
 	"fmt"
-	"nopi/internals/database"
-	"nopi/structs"
+	"kano/internals/database"
+	"kano/structs"
 
 	"github.com/gin-gonic/gin"
 )

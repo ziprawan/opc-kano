@@ -2,7 +2,7 @@ package message
 
 import (
 	"fmt"
-	"nopi/internals/database"
+	"kano/internals/database"
 	"slices"
 	"strings"
 

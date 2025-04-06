@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"nopi/internals/database"
+	"kano/internals/database"
 	"strings"
 	"time"
 

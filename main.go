@@ -15,11 +15,11 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 
-	"nopi/internals/database"
-	handlers "nopi/internals/handlers"
-	projectConfig "nopi/internals/project_config"
-	"nopi/internals/utils/account"
-	webhandlers "nopi/web_handlers"
+	"kano/internals/database"
+	handlers "kano/internals/handlers"
+	projectConfig "kano/internals/project_config"
+	"kano/internals/utils/account"
+	webhandlers "kano/web_handlers"
 )
 
 // Still copied from whatsmeow's example

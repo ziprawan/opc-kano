@@ -1,7 +1,7 @@
 package messageutils
 
 import (
-	"nopi/internals/database"
+	"kano/internals/database"
 
 	"go.mau.fi/whatsmeow/types"
 )

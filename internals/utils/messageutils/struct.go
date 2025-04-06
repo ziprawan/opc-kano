@@ -4,7 +4,7 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types/events"
 
-	"nopi/internals/utils/parser"
+	"kano/internals/utils/parser"
 )
 
 type Message struct {

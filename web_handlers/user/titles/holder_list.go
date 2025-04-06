@@ -3,8 +3,8 @@ package user_titles
 import (
 	"database/sql"
 	"fmt"
-	"nopi/internals/database"
-	"nopi/structs"
+	"kano/internals/database"
+	"kano/structs"
 	"strconv"
 	"strings"
 

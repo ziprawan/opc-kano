@@ -7,7 +7,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	projectconfig "nopi/internals/project_config"
+	projectconfig "kano/internals/project_config"
 )
 
 var (

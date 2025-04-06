@@ -1,4 +1,4 @@
-module nopi
+module kano
 
 go 1.24.1
 

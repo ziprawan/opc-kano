@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"nopi/middleware"
+	"kano/middleware"
 
 	"github.com/gin-gonic/gin"
 )

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"nopi/internals/database"
-	"nopi/structs"
+	"kano/internals/database"
+	"kano/structs"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

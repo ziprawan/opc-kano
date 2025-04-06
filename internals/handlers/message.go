@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	handler "nopi/internals/handlers/message"
-	"nopi/internals/utils/messageutils"
+	handler "kano/internals/handlers/message"
+	"kano/internals/utils/messageutils"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types/events"

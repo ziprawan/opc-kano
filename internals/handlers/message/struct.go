@@ -1,8 +1,8 @@
 package message
 
 import (
-	"nopi/internals/utils/messageutils"
-	"nopi/internals/utils/parser"
+	"kano/internals/utils/messageutils"
+	"kano/internals/utils/parser"
 )
 
 type MessageContext struct {

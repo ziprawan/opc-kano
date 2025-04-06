@@ -3,9 +3,9 @@ package middleware
 import (
 	"database/sql"
 	"fmt"
-	"nopi/internals/database"
-	projectconfig "nopi/internals/project_config"
-	"nopi/structs"
+	"kano/internals/database"
+	projectconfig "kano/internals/project_config"
+	"kano/structs"
 	"strings"
 
 	"github.com/gin-gonic/gin"
