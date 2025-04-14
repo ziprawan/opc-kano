@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"kano/internals/database"
 	"kano/structs"
+	"slices"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -72,6 +73,18 @@ func GroupMiddleware() gin.HandlerFunc {
 			}
 			group.Titles = append(group.Titles, title) // Is this fine?
 		}
+
+		slices.SortStableFunc(group.Titles, func(a structs.Title, b structs.Title) (ret int) {
+			if a.Name < b.Name {
+				ret = -1
+			} else if a.Name > b.Name {
+				ret = 1
+			} else {
+				ret = 0
+			}
+
+			return
+		})
 
 		c.Set("group", group)
 		c.Next()

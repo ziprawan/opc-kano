@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kano/internals/database"
 	"kano/structs"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -85,6 +86,18 @@ func GetHolders(c *gin.Context) {
 		holder.Name = name
 		holders = append(holders, holder)
 	}
+
+	slices.SortStableFunc(holders, func(a Holder, b Holder) (ret int) {
+		if a.Name < b.Name {
+			ret = -1
+		} else if a.Name > b.Name {
+			ret = 1
+		} else {
+			ret = 0
+		}
+
+		return
+	})
 
 	h["Holders"] = holders
 	h["group"] = group
