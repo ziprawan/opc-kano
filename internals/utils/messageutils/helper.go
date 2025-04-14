@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -25,26 +24,9 @@ func (m Message) Upload(content []byte, mediaType whatsmeow.MediaType) (whatsmeo
 }
 
 func (m Message) EditText(text string) (*whatsmeow.SendResponse, error) {
-	var participant *string = nil
-	if m.ChatJID().Server == types.GroupServer {
-		participant = proto.String(m.SenderJID().String())
-	}
-
-	var msg *waE2E.Message = &waE2E.Message{
-		ProtocolMessage: &waE2E.ProtocolMessage{
-			Key: &waCommon.MessageKey{
-				RemoteJID:   proto.String(m.ChatJID().String()),
-				FromMe:      proto.Bool(true),
-				ID:          m.ID(),
-				Participant: participant,
-			},
-			EditedMessage: &waE2E.Message{
-				Conversation: proto.String(text),
-			},
-			Type:        waE2E.ProtocolMessage_MESSAGE_EDIT.Enum(),
-			TimestampMS: proto.Int64(time.Now().UnixMilli()),
-		},
-	}
+	var msg *waE2E.Message = m.Client.BuildEdit(*m.ChatJID(), *m.ID(), &waE2E.Message{
+		Conversation: proto.String(text),
+	})
 
 	jjj, sss := json.MarshalIndent(msg, "", "  ")
 	fmt.Println(string(jjj), sss)
@@ -75,6 +57,85 @@ func GetFutureProof(m *waE2E.Message) *waE2E.FutureProofMessage {
 	}
 }
 
+func removeContextInfo(m *waE2E.Message) {
+	if k := m.ImageMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.ContactMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.LocationMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.ExtendedTextMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.DocumentMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.AudioMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.VideoMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.ContactsArrayMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.LiveLocationMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.TemplateMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.StickerMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.GroupInviteMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.TemplateButtonReplyMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.ProductMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.ListMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.OrderMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.ButtonsMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.ButtonsResponseMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.InteractiveMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.InteractiveResponseMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.PollCreationMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.RequestPhoneNumberMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.PollCreationMessageV2; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.PollCreationMessageV3; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.PtvMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.MessageHistoryBundle; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.NewsletterAdminInviteMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.AlbumMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.StickerPackMessage; k != nil {
+		k.ContextInfo = nil
+	} else if k := m.PollResultSnapshotMessage; k != nil {
+		k.ContextInfo = nil
+	}
+}
+
+func (m *Message) getCleanQuotedMessage() (content *waE2E.Message) {
+	content = m.Event.RawMessage
+	for range 5 {
+		inner := GetFutureProof(content)
+
+		if inner == nil {
+			break
+		}
+
+		content = inner.Message
+	}
+	removeContextInfo(content)
+	return
+}
+
 func (m Message) Reply(text string, quoted bool) (*whatsmeow.SendResponse, error) {
 	acc, err := account.GetData()
 	if err != nil {
@@ -82,22 +143,10 @@ func (m Message) Reply(text string, quoted bool) (*whatsmeow.SendResponse, error
 	}
 
 	var msg waE2E.Message
-
 	sender := m.SenderJID().String()
 
 	if quoted {
-		content := m.Event.Message
-
-		for range 5 {
-			inner := GetFutureProof(content)
-
-			if inner == nil {
-				break
-			}
-
-			content = inner.Message
-		}
-
+		content := m.getCleanQuotedMessage()
 		msg.ExtendedTextMessage = &waE2E.ExtendedTextMessage{
 			Text: proto.String(text),
 			ContextInfo: &waE2E.ContextInfo{
@@ -138,20 +187,8 @@ func (m Message) ReplyWithTags(text string, tags []string) (*whatsmeow.SendRespo
 	}
 
 	var msg waE2E.Message
-
 	sender := m.SenderJID().String()
-
-	content := m.Event.Message
-
-	for range 5 {
-		inner := GetFutureProof(content)
-
-		if inner == nil {
-			break
-		}
-
-		content = inner.Message
-	}
+	content := m.getCleanQuotedMessage()
 
 	msg.ExtendedTextMessage = &waE2E.ExtendedTextMessage{
 		Text: proto.String(text),
@@ -203,9 +240,11 @@ func (m Message) ReplyImage(content []byte, mimeType string, caption string, quo
 	sender := m.SenderJID().String()
 
 	if quoted {
+		content := m.getCleanQuotedMessage()
 		imgMsg.ContextInfo = &waE2E.ContextInfo{
-			StanzaID:    m.ID(),
-			Participant: &sender,
+			StanzaID:      m.ID(),
+			Participant:   &sender,
+			QuotedMessage: content,
 		}
 	}
 
@@ -222,29 +261,31 @@ func (m Message) ReplyVideo(content []byte, mimeType string, caption string, quo
 		return nil, err
 	}
 
-	vidMsg := &waE2E.VideoMessage{
-		Caption:  proto.String(caption),
-		Mimetype: proto.String(mimeType),
-		// URL:           &resp.URL,
+	var msg waE2E.Message
+
+	sender := m.SenderJID().String()
+
+	msg.VideoMessage = &waE2E.VideoMessage{
+		Caption:       proto.String(caption),
+		Mimetype:      proto.String(mimeType),
+		URL:           &resp.URL,
 		DirectPath:    &resp.DirectPath,
 		MediaKey:      resp.MediaKey,
 		FileEncSHA256: resp.FileEncSHA256,
 		FileSHA256:    resp.FileSHA256,
 		FileLength:    &resp.FileLength,
 	}
-	sender := m.SenderJID().String()
 
 	if quoted {
-		vidMsg.ContextInfo = &waE2E.ContextInfo{
-			StanzaID:    m.ID(),
-			Participant: &sender,
+		content := m.getCleanQuotedMessage()
+		msg.VideoMessage.ContextInfo = &waE2E.ContextInfo{
+			StanzaID:      m.ID(),
+			Participant:   &sender,
+			QuotedMessage: content,
 		}
 	}
 
-	sent, err := m.Client.SendMessage(context.Background(), *m.ChatJID(), &waE2E.Message{
-		VideoMessage: vidMsg,
-	})
-
+	sent, err := m.Client.SendMessage(context.Background(), *m.ChatJID(), &msg)
 	return &sent, err
 }
 
@@ -266,9 +307,11 @@ func (m Message) ReplyAudio(content []byte, mimeType string, quoted bool) (*what
 	sender := m.SenderJID().String()
 
 	if quoted {
+		content := m.getCleanQuotedMessage()
 		audMsg.ContextInfo = &waE2E.ContextInfo{
-			StanzaID:    m.ID(),
-			Participant: &sender,
+			StanzaID:      m.ID(),
+			Participant:   &sender,
+			QuotedMessage: content,
 		}
 	}
 
@@ -286,8 +329,7 @@ func (m Message) ReplySticker(content []byte, quoted bool) (*whatsmeow.SendRespo
 	}
 
 	now := time.Now().Unix()
-
-	fmt.Println(resp)
+	sender := m.SenderJID().String()
 
 	stkMsg := &waE2E.StickerMessage{
 		StickerSentTS:     &now,
@@ -302,14 +344,13 @@ func (m Message) ReplySticker(content []byte, quoted bool) (*whatsmeow.SendRespo
 		IsLottie:          proto.Bool(false),
 		MediaKeyTimestamp: &now,
 	}
-	// sender := m.SenderJID().String()
 
 	if quoted {
-		// stkMsg.ContextInfo = &waE2E.ContextInfo{
-		// 	StanzaID:      m.ID(),
-		// 	Participant:   &sender,
-		// 	QuotedMessage: m.Event.RawMessage,
-		// }
+		stkMsg.ContextInfo = &waE2E.ContextInfo{
+			StanzaID:      m.ID(),
+			Participant:   &sender,
+			QuotedMessage: m.getCleanQuotedMessage(),
+		}
 	}
 
 	sent, err := m.Client.SendMessage(context.Background(), *m.ChatJID(), &waE2E.Message{
