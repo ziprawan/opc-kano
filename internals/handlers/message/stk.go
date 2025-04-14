@@ -48,6 +48,8 @@ func appendEXIF(src []byte, publisher string) []byte {
 		StickerPackID:        proto.String("kano_sticker_packs"),
 		StickerPackName:      proto.String("Kano Bot"),
 		StickerPackPublisher: proto.String(publisher),
+		AndroidAppStoreLink:  proto.String("https://play.google.com/store/apps/details?id=com.github.android"),
+		IOSAppStoreLink:      proto.String("https://apps.apple.com/us/app/github/id1477376905"),
 		Emoji:                []string{},
 	}
 	mar, _ := json.Marshal(metadata)
@@ -94,10 +96,10 @@ func appendEXIF(src []byte, publisher string) []byte {
 		}
 
 		newVal, _ := strconv.ParseUint(currentAttribute, 2, 0)
+		src[idx+8] = byte(newVal)
 		srcFixed = append(srcFixed, src[:4]...)
 		srcFixed = append(srcFixed, stkDataLength...)
 		srcFixed = append(srcFixed, src[8:]...)
-		src[idx+8] = byte(newVal)
 	} else {
 		// Recalculate image data length
 		stkDataLength := make([]byte, 4)
@@ -108,6 +110,8 @@ func appendEXIF(src []byte, publisher string) []byte {
 		srcFixed = append(srcFixed, []byte("WEBPVP8X\x0A\x00\x00\x00\x08\x00\x00\x00\xff\x01\x00\xff\x01\x00")...)
 		srcFixed = append(srcFixed, src[12:]...)
 	}
+
+	// os.WriteFile("test.webp", srcFixed, 0644)
 
 	return srcFixed
 }
@@ -164,7 +168,7 @@ func stkImage(ctx *MessageContext, downloadableMessage whatsmeow.DownloadableMes
 
 	// 500 KB
 	if len(resBytes) > 500*1024 {
-		ctx.Instance.Reply(fmt.Sprintf("Stiker yang dibuat melebihi 500 KB, mungkin coba kurangi durasi video? (Didapat: %.2f KB)", float32(len(resBytes))/1024), true)
+		ctx.Instance.Reply(fmt.Sprintf("Stiker yang dibuat melebihi 500 KB (that's weird...) (Didapat: %.2f KB)", float32(len(resBytes))/1024), true)
 		return
 	}
 
@@ -205,7 +209,7 @@ func stkVideo(ctx *MessageContext, downloadableMsg whatsmeow.DownloadableMessage
 				duration, _ := strconv.ParseFloat(*stream.Duration, 32)
 
 				if duration > 10 {
-					ctx.Instance.Reply(fmt.Sprintf("Panjang video melebihi 10 detik. (Didapat: %.2f detik)", duration), true)
+					ctx.Instance.Reply(fmt.Sprintf("Durasi video melebihi 10 detik. (Didapat: %.2f detik)", duration), true)
 					return
 				}
 			}
@@ -300,14 +304,18 @@ func (ctx MessageContext) StkHandler() {
 		fmt.Println("Got mimetype:", mimeType)
 
 		if strings.HasPrefix(mimeType, "image/") {
-			stkImage(&ctx, doc)
+			if strings.HasSuffix(mimeType, "gif") {
+				stkVideo(&ctx, doc)
+			} else {
+				stkImage(&ctx, doc)
+			}
 		} else if strings.HasPrefix(mimeType, "video/") {
 			stkVideo(&ctx, doc)
 		} else {
 			ctx.Instance.Reply(fmt.Sprintf("Tidak dapat memproses tipe media: %s", mimeType), true)
 		}
 	} else {
-		ctx.Instance.Reply("Berikan atau reply gambar", true)
+		ctx.Instance.Reply("Berikan atau reply gambar/video/dokumen", true)
 		return
 	}
 }
