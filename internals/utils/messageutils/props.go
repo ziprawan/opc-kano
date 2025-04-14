@@ -164,7 +164,7 @@ func (m Message) ResolveReactedMessage() (*Message, error) {
 	}
 
 	actualSender := *key.RemoteJID
-	if actualSender == m.ChatJID().String() {
+	if key.Participant != nil {
 		actualSender = *key.Participant
 	}
 

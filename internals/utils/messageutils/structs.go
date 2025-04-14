@@ -12,6 +12,10 @@ type Message struct {
 	Event  *events.Message
 }
 
+// func saveGroupNew(jid *types.JID) (group Group, err error) {
+// 	return
+// }
+
 func CreateMessageInstance(client *whatsmeow.Client, event *events.Message) Message {
 	return Message{Client: client, Event: event}
 }

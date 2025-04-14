@@ -19,7 +19,7 @@ var (
 )
 
 func (m Message) SaveGroup(force bool) (*Chat, error) {
-	return saveGroup(m.ChatJID(), m.SenderJID(), m.Event, m.Client)
+	return saveGroup(m.ChatJID(), m.SenderJID(), m.Event, m.Client, force)
 }
 
 func (m Message) SaveContact() (*Chat, error) {
