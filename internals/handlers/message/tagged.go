@@ -51,6 +51,8 @@ func (ctx MessageContext) TaggedHandler() {
 		return
 	}
 
+	allKeys := make(map[string]bool)
+	var allTitles []string
 	specials := []string{"member", "manager", "admin", "superadmin"}
 	for _, special := range specials {
 		if slices.Contains(tagged, special) {
@@ -68,29 +70,34 @@ func (ctx MessageContext) TaggedHandler() {
 					return
 				}
 				jids = append(jids, jid)
+				allKeys[special] = true
 			}
 		}
 	}
 
-	rows, err := db.Query("SELECT c.jid FROM group_title gt JOIN group_title_holder gth ON gt.id = gth.group_title_id JOIN participant p ON gth.participant_id = p.id AND gth.holding = true JOIN contact c ON p.contact_id = c.id WHERE gt.group_id = $1 AND gt.title_name = ANY($2::varchar[]) GROUP BY c.jid", grp.Group.ID, pq.Array(tagged))
+	rows, err := db.Query("SELECT c.jid, gt.title_name FROM group_title gt JOIN group_title_holder gth ON gt.id = gth.group_title_id JOIN participant p ON gth.participant_id = p.id AND gth.holding = true JOIN contact c ON p.contact_id = c.id WHERE gt.group_id = $1 AND gt.title_name = ANY($2::varchar[]) GROUP BY c.jid, gt.title_name", grp.Group.ID, pq.Array(tagged))
 	if err != nil {
-		fmt.Println("Something went wrong when querying tag jids", true)
+		fmt.Println("Something went wrong when querying tag jids", err)
 		return
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var jid string
-		err := rows.Scan(&jid)
+		var jid, title_name string
+		err := rows.Scan(&jid, &title_name)
 		if err != nil {
 			fmt.Println("Something went wreng when scanning result jid", err)
 			return
 		}
 
 		jids = append(jids, jid)
+		if _, val := allKeys[title_name]; !val {
+			allKeys[title_name] = true
+			allTitles = append(allTitles, title_name)
+		}
 	}
 
-	allKeys := make(map[string]bool)
+	allKeys = make(map[string]bool)
 	var uniqJids []string
 	for _, item := range jids {
 		if _, val := allKeys[item]; !val {
@@ -103,5 +110,5 @@ func (ctx MessageContext) TaggedHandler() {
 		return
 	}
 
-	ctx.Instance.ReplyWithTags(fmt.Sprintf("@%s", strings.Join(tagged, " @")), uniqJids)
+	ctx.Instance.ReplyWithTags(fmt.Sprintf("@%s", strings.Join(allTitles, " @")), uniqJids)
 }
