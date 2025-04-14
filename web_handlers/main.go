@@ -176,7 +176,7 @@ func Web() {
 
 		claims := jwt.RegisteredClaims{
 			Subject:   fmt.Sprintf("%d", req.ContactID),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		}
 
@@ -187,7 +187,7 @@ func Web() {
 			return
 		}
 
-		c.SetCookie("auth", signedToken, 24*3600, "/", "", false, true)
+		c.SetCookie("auth", signedToken, 7*24*3600, "/", "", false, true)
 
 		if req.LoginRedirect.Valid {
 			c.Redirect(302, req.LoginRedirect.String)
