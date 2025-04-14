@@ -25,8 +25,7 @@ func MessageEventHandler(client *whatsmeow.Client, event *events.Message) error 
 		fmt.Printf("PESAN BERHASIL DISIMPAN!\n")
 	}
 
-	text := msgInstance.Text()
-	parsed, err := msgInstance.InitParser([]string{".", "!", "/"})
+	parsed, err := msgInstance.InitParser([]string{".", ". ", "!", "! ", "/", "/ "})
 
 	if err != nil {
 		fmt.Println(err)
@@ -34,20 +33,6 @@ func MessageEventHandler(client *whatsmeow.Client, event *events.Message) error 
 
 	handlerCtx := handler.InitHandlerContext(&msgInstance, &parsed)
 	cmd := parsed.GetCommand()
-
-	// jsonByte, err := json.MarshalIndent(event.RawMessage, "", " ")
-
-	// fmt.Printf("%+v\n", event)
-
-	// if err != nil {
-	// 	client.SendMessage(context.Background(), event.Info.Chat, &waE2E.Message{
-	// 		Conversation: proto.String(err.Error()),
-	// 	})
-	// }
-
-	// client.SendMessage(context.Background(), event.Info.Chat, &waE2E.Message{
-	// 	Conversation: proto.String(string(jsonByte)),
-	// })
 
 	handlerCtx.TaggedHandler()
 
@@ -75,11 +60,13 @@ func MessageEventHandler(client *whatsmeow.Client, event *events.Message) error 
 		handlerCtx.ConfessHandler()
 	}
 
+	if cmd.Command == "confesstarget" {
+		handlerCtx.ConfessTargetHandler()
+	}
+
 	if cmd.Command == "login" {
 		handlerCtx.LoginHandler()
 	}
-
-	fmt.Println("Received conversation: ", text)
 
 	return nil
 }
