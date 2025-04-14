@@ -86,6 +86,9 @@ func main() {
 				fmt.Println(res)
 				syscall.Exit(0)
 			}
+		case *events.GroupInfo:
+			marsh, _ := json.MarshalIndent(v, "", "  ")
+			fmt.Println(string(marsh))
 		}
 	}
 
