@@ -59,6 +59,7 @@ func voStartDownload(instance *messageutils.Message, selectedMsg *waE2E.Message)
 		instance.Reply("Itu bukan vo", true)
 		return
 	}
+	fmt.Printf("Reply pesannya: %+v\n", downloadableMsg)
 
 	downloaded_bytes, err := instance.Client.Download(downloadableMsg)
 	if err != nil {
@@ -205,6 +206,27 @@ func (ctx MessageContext) VoHandler() {
 		return
 	}
 
+	var isViewOnce bool = false
+	rawMsg := repliedMsg.Event.RawMessage
+	if v := rawMsg.ViewOnceMessage; v != nil {
+		isViewOnce = true
+	} else if v := rawMsg.ViewOnceMessageV2; v != nil {
+		isViewOnce = true
+	} else if v := rawMsg.ViewOnceMessageV2Extension; v != nil {
+		isViewOnce = true
+	} else if v := rawMsg.ImageMessage; v != nil && v.ViewOnce != nil && *v.ViewOnce {
+		isViewOnce = true
+	} else if v := rawMsg.VideoMessage; v != nil && v.ViewOnce != nil && *v.ViewOnce {
+		isViewOnce = true
+	} else if v := rawMsg.AudioMessage; v != nil && v.ViewOnce != nil && *v.ViewOnce {
+		isViewOnce = true
+	}
+
+	if !isViewOnce {
+		ctx.Instance.Reply("Itu bukan vo wo", true)
+		return
+	}
+
 	if ctx.Instance.SenderJID().String() == *part {
 		voStartDownload(ctx.Instance, repliedMsg.Event.RawMessage)
 		return
@@ -225,12 +247,12 @@ func (ctx MessageContext) VoHandler() {
 	}
 
 	if reqFound {
-		var text string = "Permintaan untuk pesan tersebut sudah ada"
+		var text string = "Udah pernah diminta"
 		if accepted.Valid {
 			if accepted.Bool {
-				text += " dan yang diminta sudah menerimanya"
+				text += " sama disetujui"
 			} else {
-				text += " dan yang diminta sudah menolaknya"
+				text += " tapi ditolak"
 			}
 		}
 
