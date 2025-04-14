@@ -107,9 +107,9 @@ func AddTitleAPI(c *gin.Context) {
 		return
 	}
 
-	if len(bind.TitleName) < 3 {
+	if len(bind.TitleName) < 2 {
 		if returnJSON {
-			c.JSON(400, gin.H{"code": 400, "description": "Title length is less than 3"})
+			c.JSON(400, gin.H{"code": 400, "description": "Title length is less than 2"})
 		} else {
 			c.HTML(400, "components/error.html", gin.H{"error_code": 400, "error_message": "Title length is less than 3"})
 		}
