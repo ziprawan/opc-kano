@@ -59,6 +59,7 @@ func LoadConfig() *Config {
 			fmt.Println("CONFESS_TARGET might not a valid JID")
 		} else {
 			confessTarget.JID = confessTargetJID
+			confessTarget.Valid = true
 		}
 
 		if _, err := strconv.Atoi(ownerJID); err != nil {
