@@ -24,14 +24,14 @@ func (ctx MessageContext) TaggedHandler() {
 	db := database.GetDB()
 	var jids []string
 
-	grp, err := ctx.Instance.SaveGroup(false)
+	grp := ctx.Instance.Group
 	if grp == nil {
-		fmt.Println("Something went wrong when getting group info", err)
+		fmt.Println("Chat is not a group, ignoring...")
 		return
 	}
 
 	if slices.Contains(tagged, "all") {
-		rows, err := db.Query("SELECT c.jid FROM participant p JOIN contact c ON c.id = p.contact_id AND p.group_id = $1", grp.Group.ID)
+		rows, err := db.Query("SELECT c.jid FROM participant p JOIN contact c ON c.id = p.contact_id AND p.group_id = $1", grp.ID)
 		if err != nil {
 			fmt.Println("Failed to query all participants", err)
 			return
@@ -56,7 +56,7 @@ func (ctx MessageContext) TaggedHandler() {
 	specials := []string{"member", "manager", "admin", "superadmin"}
 	for _, special := range specials {
 		if slices.Contains(tagged, special) {
-			rows, err := db.Query("SELECT c.jid FROM participant p JOIN contact c ON c.id = p.contact_id AND p.group_id = $1 AND p.role = $2", grp.Group.ID, strings.ToUpper(special))
+			rows, err := db.Query("SELECT c.jid FROM participant p JOIN contact c ON c.id = p.contact_id AND p.group_id = $1 AND p.role = $2", grp.ID, strings.ToUpper(special))
 			if err != nil {
 				fmt.Println("Failed to query all participants", err)
 				return
@@ -75,7 +75,7 @@ func (ctx MessageContext) TaggedHandler() {
 		}
 	}
 
-	rows, err := db.Query("SELECT c.jid, gt.title_name FROM group_title gt JOIN group_title_holder gth ON gt.id = gth.group_title_id JOIN participant p ON gth.participant_id = p.id AND gth.holding = true JOIN contact c ON p.contact_id = c.id WHERE gt.group_id = $1 AND gt.title_name = ANY($2::varchar[]) GROUP BY c.jid, gt.title_name", grp.Group.ID, pq.Array(tagged))
+	rows, err := db.Query("SELECT c.jid, gt.title_name FROM group_title gt JOIN group_title_holder gth ON gt.id = gth.group_title_id JOIN participant p ON gth.participant_id = p.id AND gth.holding = true JOIN contact c ON p.contact_id = c.id WHERE gt.group_id = $1 AND gt.title_name = ANY($2::varchar[]) GROUP BY c.jid, gt.title_name", grp.ID, pq.Array(tagged))
 	if err != nil {
 		fmt.Println("Something went wrong when querying tag jids", err)
 		return

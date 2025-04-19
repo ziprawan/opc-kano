@@ -1,28 +1,26 @@
 package messageutils
 
 import (
+	"errors"
 	"kano/internals/database"
+)
 
-	"go.mau.fi/whatsmeow/types"
+var (
+	ErrUnsupportedJidServer = errors.New("unsupported jid server")
 )
 
 // Internal function of SaveToDatabase()
 // Parameter required
 func saveToDatabase(m Message) error {
 	db := database.GetDB()
-	res, err := m.SaveEntities()
+
+	raw, err := m.Marshal()
 	if err != nil {
 		return err
 	}
 
-	server := m.ChatJID().Server
-	raw, err := m.Raw()
-	if err != nil {
-		return err
-	}
-
-	if server == types.GroupServer {
-		entId := res[0].Group.EntityID
+	if m.Group != nil {
+		entId := m.Group.EntityID
 
 		_, err := db.Exec("INSERT INTO \"message\" VALUES (DEFAULT, DEFAULT, DEFAULT, $1, $2, $3, DEFAULT, $4)", m.ID(), entId, raw, m.Text())
 		if err != nil {
@@ -30,8 +28,8 @@ func saveToDatabase(m Message) error {
 		}
 
 		return nil
-	} else if server == types.DefaultUserServer {
-		entId := res[1].Contact.EntityID
+	} else if m.Contact != nil {
+		entId := m.Contact.EntityID
 
 		_, err := db.Exec("INSERT INTO \"message\" VALUES (DEFAULT, DEFAULT, DEFAULT, $1, $2, $3, DEFAULT, $4)", m.ID(), entId, raw, m.Text())
 		if err != nil {

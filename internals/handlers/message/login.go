@@ -30,9 +30,9 @@ func (ctx MessageContext) LoginHandler() {
 	}
 
 	args := ctx.Parser.GetArgs()
-	contact, err := ctx.Instance.SaveContact()
-	if err != nil {
-		ctx.Instance.Reply("Terjadi kesalahan saat menyiapkan data", true)
+	contact := ctx.Instance.Contact
+	if contact == nil {
+		ctx.Instance.Reply("Terjadi kesalahan saat mengambil data kontak", true)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (ctx MessageContext) LoginHandler() {
 		return
 	}
 
-	_, err = stmt.Exec(loginRequestID, loginExpirationDate, loginRedirect, contact.Contact.ID)
+	_, err = stmt.Exec(loginRequestID, loginExpirationDate, loginRedirect, contact.ID)
 	if err != nil {
 		ctx.Instance.Reply("Terjadi kesalahan saat memasukkan data", true)
 		return

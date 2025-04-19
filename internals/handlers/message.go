@@ -31,7 +31,7 @@ func MessageEventHandler(client *whatsmeow.Client, event *events.Message) error 
 		fmt.Println(err)
 	}
 
-	handlerCtx := handler.InitHandlerContext(&msgInstance, &parsed)
+	handlerCtx := handler.InitHandlerContext(msgInstance, &parsed)
 	cmd := parsed.GetCommand()
 
 	handlerCtx.TaggedHandler()

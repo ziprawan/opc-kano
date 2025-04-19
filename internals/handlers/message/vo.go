@@ -261,21 +261,16 @@ func (ctx MessageContext) VoHandler() {
 	}
 
 	var entID *int64
-	err = db.QueryRow("SELECT id FROM entity WHERE account_id = $1 AND jid = $2", acc.ID, ctx.Instance.ChatJID().String()).Scan(&entID)
-	if err != nil {
-		grp, err := ctx.Instance.SaveGroup(false)
-		if err != nil {
-			return
-		}
-
-		if grp.Group != nil {
-			entID = &grp.Group.AccountID
-		} else if grp.Contact != nil {
-			entID = &grp.Contact.AccountID
-		}
+	grp := ctx.Instance.Group
+	ctc := ctx.Instance.Contact
+	if grp != nil {
+		entID = &grp.EntityID
+	} else if ctc != nil {
+		entID = &ctc.EntityID
 	}
 
 	if entID == nil {
+		fmt.Println("Something went wrong when resolving entity id")
 		return
 	}
 

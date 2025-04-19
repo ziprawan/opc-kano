@@ -26,12 +26,14 @@ func (m Message) SenderJID() *types.JID {
 	return &nonAD
 }
 
-func (m Message) Conversation() string {
+func conversation(ev *events.Message) string {
 	var text string
 
-	msg := m.Event.Message
-
-	if c := m.Event.Message.GetConversation(); c != "" {
+	if ev == nil || ev.Message == nil {
+		return text
+	}
+	msg := ev.Message
+	if c := msg.GetConversation(); c != "" {
 		text = c
 	} else if msg.ExtendedTextMessage != nil && msg.ExtendedTextMessage.Text != nil {
 		text = *msg.ExtendedTextMessage.Text
@@ -40,36 +42,47 @@ func (m Message) Conversation() string {
 	return strings.TrimSpace(text)
 }
 
-func (m Message) Caption() string {
-	var caption string
+func (m Message) Conversation() string {
+	return conversation(m.Event)
+}
 
-	if d := m.Event.RawMessage.DocumentWithCaptionMessage; d != nil {
-		if d.Message.DocumentMessage.Caption != nil {
-			caption = *d.Message.DocumentMessage.Caption
-		}
-	} else if i := m.Event.Message.ImageMessage; i != nil {
-		if i.Caption != nil {
-			caption = *i.Caption
-		}
-	} else if v := m.Event.Message.VideoMessage; v != nil {
-		if v.Caption != nil {
-			caption = *v.Caption
-		}
+func caption(ev *events.Message) string {
+	var caption string
+	if ev == nil || ev.Message == nil {
+		return caption
 	}
 
-	return caption
+	if d := ev.RawMessage.DocumentWithCaptionMessage; d != nil {
+		if e := d.Message; e != nil {
+			if f := e.DocumentMessage; f != nil && f.Caption != nil {
+				caption = *f.Caption
+			}
+		}
+	} else if i := ev.Message.ImageMessage; i != nil && i.Caption != nil {
+		caption = *i.Caption
+	} else if v := ev.Message.VideoMessage; v != nil && v.Caption != nil {
+		caption = *v.Caption
+	}
+
+	return strings.TrimSpace(caption)
+}
+
+func (m Message) Caption() string {
+	return caption(m.Event)
+}
+
+func text(ev *events.Message) string {
+	var text string
+	if con := conversation(ev); con != "" {
+		text = con
+	} else if cap := caption(ev); cap != "" {
+		text = cap
+	}
+	return strings.TrimSpace(text)
 }
 
 func (m Message) Text() string {
-	var text string
-
-	if con := m.Conversation(); con != "" {
-		text = con
-	} else if cap := m.Caption(); cap != "" {
-		text = cap
-	}
-
-	return text
+	return text(m.Event)
 }
 
 func (m Message) Reaction() *string {
@@ -93,13 +106,13 @@ func (m Message) GetReactedMessageID() *types.MessageID {
 	return nil
 }
 
-func raw(ev *events.Message) (ret string, err error) {
+func marshal(ev *events.Message) (ret string, err error) {
 	mar, err := json.Marshal(ev)
 	return string(mar), err
 }
 
-func (m Message) Raw() (string, error) {
-	return raw(m.Event)
+func (m Message) Marshal() (string, error) {
+	return marshal(m.Event)
 }
 
 func (m Message) ResolveReplyMessage(force_save bool) (*Message, error) {
