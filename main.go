@@ -29,7 +29,7 @@ func main() {
 	db := database.GetDB()
 	acc := account.InitAccount(conf.SessionName)
 
-	dbLog := waLog.Stdout("Database", "DEBUG", true)
+	dbLog := waLog.Stdout("Database", "WARN", true)
 	container, err := sqlstore.New("postgres", conf.DatabaseURL, dbLog)
 
 	if err != nil {
@@ -45,7 +45,7 @@ func main() {
 		deviceStore = container.NewDevice()
 	}
 
-	clientLog := waLog.Stdout("Client", "DEBUG", true)
+	clientLog := waLog.Stdout("Client", "WARN", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
 
 	var eventHandler = func(evt any) {
