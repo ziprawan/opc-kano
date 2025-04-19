@@ -17,6 +17,7 @@ import (
 	"golang.org/x/image/draw"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/forPelevin/gomoji"
 	"github.com/kolesa-team/go-webp/decoder"
 	"github.com/kolesa-team/go-webp/webp"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -40,18 +41,7 @@ type Stream struct {
 	Duration  *string `json:"duration,omitempty"`
 }
 
-func appendEXIF(src []byte, publisher string) []byte {
-	if len(publisher) == 0 {
-		publisher = "Kano"
-	}
-	metadata := StickerMetadata{
-		StickerPackID:        proto.String("kano_sticker_packs"),
-		StickerPackName:      proto.String("Kano Bot"),
-		StickerPackPublisher: proto.String(publisher),
-		AndroidAppStoreLink:  proto.String("https://play.google.com/store/apps/details?id=com.github.android"),
-		IOSAppStoreLink:      proto.String("https://apps.apple.com/us/app/github/id1477376905"),
-		Emoji:                []string{},
-	}
+func appendEXIF(src []byte, metadata StickerMetadata) []byte {
 	mar, _ := json.Marshal(metadata)
 
 	length := make([]byte, 4)
@@ -116,7 +106,7 @@ func appendEXIF(src []byte, publisher string) []byte {
 	return srcFixed
 }
 
-func stkImage(ctx *MessageContext, downloadableMessage whatsmeow.DownloadableMessage) {
+func stkImage(ctx *MessageContext, downloadableMessage whatsmeow.DownloadableMessage, metadata StickerMetadata) {
 	downloaded_bytes, err := ctx.Instance.Client.Download(downloadableMessage)
 	if err != nil {
 		ctx.Instance.Reply("Terjadi kesalahan saat mengunduh media", true)
@@ -164,7 +154,7 @@ func stkImage(ctx *MessageContext, downloadableMessage whatsmeow.DownloadableMes
 	webp.Encode(&byteResult, dst, nil)
 	resBytes := byteResult.Bytes()
 
-	resBytes = appendEXIF(resBytes, ctx.Instance.Event.Info.PushName)
+	resBytes = appendEXIF(resBytes, metadata)
 
 	// 500 KB
 	if len(resBytes) > 500*1024 {
@@ -175,7 +165,7 @@ func stkImage(ctx *MessageContext, downloadableMessage whatsmeow.DownloadableMes
 	ctx.Instance.ReplySticker(resBytes, false)
 }
 
-func stkVideo(ctx *MessageContext, downloadableMsg whatsmeow.DownloadableMessage) {
+func stkVideo(ctx *MessageContext, downloadableMsg whatsmeow.DownloadableMessage, metadata StickerMetadata) {
 	downloaded_bytes, err := ctx.Instance.Client.Download(downloadableMsg)
 	if err != nil {
 		ctx.Instance.Reply("Terjadi kesalahan saat mengunduh media!", true)
@@ -240,7 +230,7 @@ func stkVideo(ctx *MessageContext, downloadableMsg whatsmeow.DownloadableMessage
 
 	bbb := make([]byte, buf.Len())
 	buf.Read(bbb)
-	bbb = appendEXIF(bbb, ctx.Instance.Event.Info.PushName)
+	bbb = appendEXIF(bbb, metadata)
 
 	// 1 MB
 	if len(bbb) > 1024*1024 {
@@ -282,16 +272,61 @@ func (ctx MessageContext) StkHandler() {
 		}
 	}
 
+	publisher := ctx.Instance.Event.Info.PushName
+	if publisher == "" {
+		publisher = "Kano"
+	}
+	metadata := StickerMetadata{
+		StickerPackID:        proto.String("kano_sticker_packs"),
+		StickerPackName:      proto.String("Kano Bot"),
+		StickerPackPublisher: proto.String(publisher),
+		Emoji:                []string{},
+		AndroidAppStoreLink:  proto.String("https://play.google.com/store/apps/details?id=com.github.android"),
+		IOSAppStoreLink:      proto.String("https://apps.apple.com/us/app/github/id1477376905"),
+	}
+
+	args := ctx.Parser.GetArgs()
+	if len(args) >= 5 {
+		metadata.AndroidAppStoreLink = &args[3].Content
+		metadata.IOSAppStoreLink = &args[4].Content
+	}
+	if len(args) == 4 {
+		ctx.Instance.Reply("Berikan link untuk iOS juga!", true)
+		return
+	}
+	if len(args) >= 3 {
+		found := gomoji.FindAll(args[2].Content)
+		emojis := []string{}
+		for _, emoji := range found {
+			emojis = append(emojis, emoji.Character)
+		}
+		metadata.Emoji = emojis
+	}
+	if len(args) >= 2 {
+		metadata.StickerPackPublisher = &args[1].Content
+	}
+	if len(args) >= 1 {
+		metadata.StickerPackName = &args[0].Content
+	}
+
 	if img != nil {
-		stkImage(&ctx, img)
+		if img.ViewOnce != nil && *img.ViewOnce {
+			ctx.Instance.Reply("Gambarnya sekali lihat dawg", true)
+			return
+		}
+		stkImage(&ctx, img, metadata)
 		return
 	} else if vid != nil {
+		if vid.ViewOnce != nil && *vid.ViewOnce {
+			ctx.Instance.Reply("Videonya sekali lihat dawg", true)
+			return
+		}
 		if vid.FileLength != nil && *vid.FileLength > 10*1024*1024 {
 			ctx.Instance.Reply("Kegedean 🥵 (Jangan lebih dari 10 MB ya mas)", true)
 			return
 		}
 
-		stkVideo(&ctx, vid)
+		stkVideo(&ctx, vid, metadata)
 		return
 	} else if doc != nil {
 		if doc.Mimetype == nil {
@@ -305,17 +340,17 @@ func (ctx MessageContext) StkHandler() {
 
 		if strings.HasPrefix(mimeType, "image/") {
 			if strings.HasSuffix(mimeType, "gif") {
-				stkVideo(&ctx, doc)
+				stkVideo(&ctx, doc, metadata)
 			} else {
-				stkImage(&ctx, doc)
+				stkImage(&ctx, doc, metadata)
 			}
 		} else if strings.HasPrefix(mimeType, "video/") {
-			stkVideo(&ctx, doc)
+			stkVideo(&ctx, doc, metadata)
 		} else {
 			ctx.Instance.Reply(fmt.Sprintf("Tidak dapat memproses tipe media: %s", mimeType), true)
 		}
 	} else {
-		ctx.Instance.Reply("Berikan atau reply gambar/video/dokumen", true)
+		ctx.Instance.Reply("Berikan atau reply gambar/video/dokumen. \nFormat: .stk <nama pack> <nama publisher> <emoji> <link pack android> <link pack ios>", true)
 		return
 	}
 }
