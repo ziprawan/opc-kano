@@ -159,16 +159,24 @@ func (ctx MessageContext) voReactHandler() (stop bool) {
 		return
 	} else if react == ACCEPT {
 		fmt.Println("[vo] Accepted")
-		reactedMsg.EditText("Permintaan diterima! Mohon ditunggu")
+		editedMsg, editErr := reactedMsg.EditText("Permintaan diterima! Mohon ditunggu")
+		if editErr != nil {
+			fmt.Println("[vo] Failed to edit message with error: ", editErr)
+			return
+		}
 
 		// Set request status into accepted
 		_, err := db.Exec("UPDATE request_view_once AS rvo SET accepted = true WHERE rvo.id = $1", reqID)
 		if err != nil {
-			fmt.Println("[vo] Failed to set accepted into true where request id is", reqID, "with error", err)
+			fmt.Println("[vo] Failed to set accepted into true where request id is", reqID, "with error", editErr)
 			return
 		}
 
-		voStartDownload(reactedMsg, requestedMsg.Event.RawMessage)
+		if editedMsg != nil {
+			voStartDownload(editedMsg, requestedMsg.Event.RawMessage)
+		} else {
+			voStartDownload(reactedMsg, requestedMsg.Event.RawMessage)
+		}
 		return
 	}
 
@@ -280,9 +288,10 @@ func (ctx MessageContext) VoHandler() {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO request_view_once VALUES(DEFAULT, DEFAULT, $1, $2, $3)", &entID, confirm.ID, repliedMsg.ID())
+	_, err = db.Exec("INSERT INTO request_view_once VALUES(DEFAULT, DEFAULT, $1, $2, $3)", &entID, confirm.ID(), repliedMsg.ID())
 	if err != nil {
-		ctx.Instance.Reply("Terjadi kesalahan saat menyimpan permintaan ke basis data", true)
+		fmt.Println("[vo] Failed to insert request into database with error: ", err)
+		ctx.Instance.Reply("Terjadi kesalahan saat menyimpan permintaan ke basis data", false)
 		return
 	}
 }
