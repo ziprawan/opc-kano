@@ -10,7 +10,7 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
-func (ctx MessageContext) TaggedHandler() {
+func (ctx *MessageContext) TaggedHandler() {
 	if ctx.Instance.ChatJID().Server != types.GroupServer {
 		return
 	}

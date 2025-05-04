@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func (ctx MessageContext) StkInfoHandler() {
+func StkInfoHandler(ctx *MessageContext) {
 	repliedMsg, err := ctx.Instance.ResolveReplyMessage(false)
 	if err != nil {
 		ctx.Instance.Reply("Terjadi kesalahan saat mengambil pesan yang di-reply", true)

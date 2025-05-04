@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (ctx MessageContext) PingHandler() {
+func PingHandler(ctx *MessageContext) {
 	msgTime := ctx.Instance.Event.Info.Timestamp.UnixMilli()
 	currTime := time.Now().UnixMilli()
 	diff := float64((currTime - msgTime)) / 1000

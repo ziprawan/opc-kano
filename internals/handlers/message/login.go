@@ -24,7 +24,7 @@ func RandomHexString(length int) (string, error) {
 	return hexStr[:length], nil
 }
 
-func (ctx MessageContext) LoginHandler() {
+func LoginHandler(ctx *MessageContext) {
 	if ctx.Instance.ChatJID().Server != types.DefaultUserServer {
 		return
 	}

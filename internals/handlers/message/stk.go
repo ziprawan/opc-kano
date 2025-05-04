@@ -241,7 +241,7 @@ func stkVideo(ctx *MessageContext, downloadableMsg whatsmeow.DownloadableMessage
 	ctx.Instance.ReplySticker(bbb, true)
 }
 
-func (ctx MessageContext) StkHandler() {
+func StkHandler(ctx *MessageContext) {
 	repliedMsg, _ := ctx.Instance.ResolveReplyMessage(false)
 
 	var img *waE2E.ImageMessage
@@ -314,7 +314,7 @@ func (ctx MessageContext) StkHandler() {
 			ctx.Instance.Reply("Gambarnya sekali lihat dawg", true)
 			return
 		}
-		stkImage(&ctx, img, metadata)
+		stkImage(ctx, img, metadata)
 		return
 	} else if vid != nil {
 		if vid.ViewOnce != nil && *vid.ViewOnce {
@@ -326,7 +326,7 @@ func (ctx MessageContext) StkHandler() {
 			return
 		}
 
-		stkVideo(&ctx, vid, metadata)
+		stkVideo(ctx, vid, metadata)
 		return
 	} else if doc != nil {
 		if doc.Mimetype == nil {
@@ -340,12 +340,12 @@ func (ctx MessageContext) StkHandler() {
 
 		if strings.HasPrefix(mimeType, "image/") {
 			if strings.HasSuffix(mimeType, "gif") {
-				stkVideo(&ctx, doc, metadata)
+				stkVideo(ctx, doc, metadata)
 			} else {
-				stkImage(&ctx, doc, metadata)
+				stkImage(ctx, doc, metadata)
 			}
 		} else if strings.HasPrefix(mimeType, "video/") {
-			stkVideo(&ctx, doc, metadata)
+			stkVideo(ctx, doc, metadata)
 		} else {
 			ctx.Instance.Reply(fmt.Sprintf("Tidak dapat memproses tipe media: %s", mimeType), true)
 		}

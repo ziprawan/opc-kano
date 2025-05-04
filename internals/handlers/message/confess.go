@@ -7,6 +7,7 @@ import (
 	"kano/internals/database"
 	"kano/internals/utils/account"
 	"strconv"
+	"strings"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
@@ -73,20 +74,20 @@ func saveUserConfessTarget(jid types.JID, targetID int64) error {
 	return nil
 }
 
-func sendConfessMessage(ctx MessageContext, jid types.JID) {
+func sendConfessMessage(ctx *MessageContext, jid types.JID) {
 	args := ctx.Parser.GetArgs()
 	if len(args) == 0 {
 		ctx.Instance.Reply("Beri pesannya dong kak (belum support media lagi)", true)
 		return
 	}
 
-	confessMsg := "Ada konfes dari seseorang nih!\n" + ctx.Parser.Text[args[0].Start:]
+	confessMsg := "Ada konfes dari seseorang nih!\n" + strings.Replace(ctx.Parser.Text, ctx.Parser.GetCommand().FullCommand, "", 1)
 	ctx.Instance.Client.SendMessage(context.Background(), jid, &waE2E.Message{
 		Conversation: &confessMsg,
 	})
 }
 
-func (ctx MessageContext) ConfessTargetHandler() {
+func ConfessTargetHandler(ctx *MessageContext) {
 	if ctx.Instance.Event.Info.Chat.Server != types.DefaultUserServer {
 		return
 	}
@@ -128,7 +129,7 @@ func (ctx MessageContext) ConfessTargetHandler() {
 	ctx.Instance.Reply(fmt.Sprintf("Berhasil mengatur target confess ke %s", name), true)
 }
 
-func (ctx MessageContext) ConfessHandler() {
+func ConfessHandler(ctx *MessageContext) {
 	if ctx.Instance.Event.Info.Chat.Server != types.DefaultUserServer {
 		return
 	}
@@ -138,7 +139,7 @@ func (ctx MessageContext) ConfessHandler() {
 	acc, err := account.GetData()
 	if err != nil {
 		fmt.Println(err)
-		ctx.Instance.Reply("Internal server error [0]", true)
+		ctx.Instance.Reply("Internal server error [-1]", true)
 		return
 	}
 

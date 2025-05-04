@@ -15,12 +15,22 @@ type NullJID struct {
 	Valid bool
 }
 
+type NullString struct {
+	String string
+	Valid  bool
+}
+
 type Config struct {
 	SessionName   string
 	DatabaseURL   string
 	OwnerJID      types.JID
 	JWTSecret     []byte
 	ConfessTarget NullJID
+
+	// These fields are optional
+
+	PDDiktiKey NullString
+	PDDiktiIV  NullString
 }
 
 var configInstance *Config
@@ -72,6 +82,17 @@ func LoadConfig() *Config {
 			OwnerJID:      types.NewJID(ownerJID, "s.whatsapp.net"),
 			JWTSecret:     []byte(JWTSecret),
 			ConfessTarget: confessTarget,
+		}
+
+		pddiktiKey, _ := getEnv("PDDIKTI_KEY")
+		if pddiktiKey != "" {
+			configInstance.PDDiktiKey.String = pddiktiKey
+			configInstance.PDDiktiKey.Valid = true
+		}
+		pddiktiIV, _ := getEnv("PDDIKTI_IV")
+		if pddiktiIV != "" {
+			configInstance.PDDiktiIV.String = pddiktiIV
+			configInstance.PDDiktiIV.Valid = true
 		}
 	})
 

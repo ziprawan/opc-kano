@@ -63,6 +63,7 @@ func voStartDownload(instance *messageutils.Message, selectedMsg *waE2E.Message)
 
 	downloaded_bytes, err := instance.Client.Download(downloadableMsg)
 	if err != nil {
+		fmt.Println("vo download error", err)
 		instance.Reply("Terjadi kesalahan saat mengunduh media!", true)
 		return
 	}
@@ -70,10 +71,18 @@ func voStartDownload(instance *messageutils.Message, selectedMsg *waE2E.Message)
 	mediaType := whatsmeow.GetMediaType(downloadableMsg)
 
 	if mediaType == whatsmeow.MediaImage {
-		instance.ReplyImage(downloaded_bytes, mimeType, caption, true)
+		instance.ReplyImage(downloaded_bytes, messageutils.ReplyImageOptions{
+			Caption:  caption,
+			MimeType: mimeType,
+			Quoted:   true,
+		})
 		return
 	} else if mediaType == whatsmeow.MediaVideo {
-		instance.ReplyVideo(downloaded_bytes, mimeType, caption, true)
+		instance.ReplyVideo(downloaded_bytes, messageutils.ReplyVideoOptions{
+			MimeType: mimeType,
+			Caption:  caption,
+			Quoted:   true,
+		})
 		return
 	} else if mediaType == whatsmeow.MediaAudio {
 		instance.ReplyAudio(downloaded_bytes, mimeType, true)
@@ -83,7 +92,7 @@ func voStartDownload(instance *messageutils.Message, selectedMsg *waE2E.Message)
 	instance.Reply("Unexpected reachable code", true)
 }
 
-func (ctx MessageContext) voReactHandler() (stop bool) {
+func (ctx *MessageContext) voReactHandler() (stop bool) {
 	stop = false
 
 	if !ctx.Instance.IsReaction() {
@@ -132,7 +141,7 @@ func (ctx MessageContext) voReactHandler() (stop bool) {
 
 	requestedMsg, err := ctx.Instance.GetMessage(requestedMsgID, ctx.Instance.ChatJID())
 	if err != nil {
-		fmt.Println("[vo] Failed to get requested message from database")
+		fmt.Println("[vo] Failed to get requested message from database", err)
 		return
 	}
 	if requestedMsg == nil {
@@ -185,7 +194,7 @@ func (ctx MessageContext) voReactHandler() (stop bool) {
 	return
 }
 
-func (ctx MessageContext) VoHandler() {
+func VoHandler(ctx *MessageContext) {
 	db := database.GetDB()
 	acc, err := account.GetData()
 	if err != nil {

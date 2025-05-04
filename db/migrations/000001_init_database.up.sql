@@ -1,7 +1,7 @@
 BEGIN;
 -- Types
 CREATE TYPE chat_type AS ENUM ('GROUP', 'CONTACT');
-CREATE TYPE participant_role AS ENUM ('MEMBER', 'ADMIN', 'SUPERADMIN', 'MANAGER');
+CREATE TYPE participant_role AS ENUM ('MEMBER', 'ADMIN', 'SUPERADMIN', 'MANAGER', 'LEFT');
 -- Tables
 CREATE TABLE IF NOT EXISTS account (
   id bigserial NOT NULL,
