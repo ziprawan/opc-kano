@@ -7,6 +7,11 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
+type GroupSettings struct {
+	ChosenShipping   []string
+	LastShippingTime sql.NullTime
+}
+
 type Group struct {
 	ID                            int64
 	JID                           *types.JID
@@ -37,6 +42,15 @@ type Group struct {
 	GroupCreated                  time.Time
 	ParticipantVersionID          string
 	MemberAddMode                 string
+
+	Settings *GroupSettings
+}
+
+type ContactSettings struct {
+	ConfessTargetID   sql.NullInt64
+	CurrentWordle     sql.NullString
+	WordleGeneratedAt sql.NullTime
+	WordleGuesses     []string
 }
 
 type Contact struct {
@@ -51,6 +65,8 @@ type Contact struct {
 	LoginRequestID      sql.NullString
 	LoginExpirationDate sql.NullTime
 	LoginRedirect       sql.NullString
+
+	Settings *ContactSettings
 }
 
 type ParticipantRole string

@@ -3,6 +3,7 @@ package saveutils
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"kano/internals/database"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/lib/pq"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 )
@@ -123,7 +125,7 @@ WHERE
 
 	INSERT_CONTACT_WITH_ENTITY_QUERY string = `
 WITH
-	"inserted_entity AS (
+	"inserted_entity" AS (
 		INSERT INTO
 			"entity"
 		VALUES
@@ -152,6 +154,20 @@ SET
 	"jid" = EXCLUDED."jid"
 RETURNING
 	"id"`
+
+	UPDATE_GROUP_SETTINGS string = `
+INSERT INTO
+	"group_settings"
+VALUES (
+	$1,
+	$2,
+	$3
+)
+ON CONFLICT
+	("id")
+DO UPDATE SET
+	chosen_shipping = $2,
+	last_shipping_time = $3`
 )
 
 func scanInt64FromRow(row *sql.Row) (*int64, error) {
@@ -165,6 +181,28 @@ func scanInt64FromRow(row *sql.Row) (*int64, error) {
 		}
 	}
 	return &num, nil
+}
+
+func getGroupSettings(groupID int64) (*GroupSettings, error) {
+	db := database.GetDB()
+	var groupSettings GroupSettings
+	var rawr sql.NullString
+	err := db.QueryRow("SELECT to_json(chosen_shipping), last_shipping_time FROM group_settings WHERE id = $1", groupID).Scan(&rawr, &groupSettings.LastShippingTime)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if rawr.Valid {
+		err := json.Unmarshal([]byte(rawr.String), &groupSettings.ChosenShipping)
+		if err != nil {
+			fmt.Println("Gagal unmarshal chosen", err)
+		}
+	}
+
+	return &groupSettings, nil
 }
 
 // Don't use this for non @g.us JID
@@ -223,6 +261,12 @@ func getGroup(jid *types.JID) (group *Group, err error) {
 	if err != nil {
 		return nil, err
 	}
+
+	groupSettings, err := getGroupSettings(g.ID)
+	if err != nil {
+		fmt.Println("Failed to get group settings:", err)
+	}
+	g.Settings = groupSettings
 	g.JID = &parsedJID
 	group = &g
 
@@ -238,13 +282,13 @@ func addOrUpdateGroupParticipant(tx *sql.Tx, group *Group, jid *types.JID, role 
 	var contactID int64
 	scannedContactID, err := scanInt64FromRow(tx.QueryRow("SELECT id FROM contact WHERE account_id = $1 AND jid = $2", group.AccountID, jid.String()))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error scanning contact id: %s", err)
 	}
 
 	if scannedContactID == nil {
-		scannedContactID, err = scanInt64FromRow(tx.QueryRow(INSERT_CONTACT_WITH_ENTITY_QUERY, group.EntityID, jid.String()))
+		scannedContactID, err = scanInt64FromRow(tx.QueryRow(INSERT_CONTACT_WITH_ENTITY_QUERY, jid.String(), group.AccountID))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error scanning insert contact id %s", err)
 		}
 		if scannedContactID == nil {
 			return nil, fmt.Errorf("failed to insert contact")
@@ -265,12 +309,12 @@ func addOrUpdateGroupParticipant(tx *sql.Tx, group *Group, jid *types.JID, role 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// Participant doesn't exist, insert it
-			err = tx.QueryRow("INSERT INTO participant (group_id, contact_id, role) VALUES ($1, $2, $3) RETURNING id", group.ID, contactID, role).Scan(&participant.ID)
+			err = tx.QueryRow("INSERT INTO participant (group_id, contact_id, role) VALUES ($1, $2, $3) RETURNING id, role", group.ID, contactID, role).Scan(&participant.ID, &participant.Role)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error when scanning insert participant %s", err)
 			}
 		} else {
-			return nil, err
+			return nil, fmt.Errorf("error scanning select participant %s", err)
 		}
 	}
 
@@ -282,12 +326,37 @@ func addOrUpdateGroupParticipant(tx *sql.Tx, group *Group, jid *types.JID, role 
 			// Update the role
 			_, err = tx.Exec("UPDATE participant SET role = $1 WHERE id = $2", role, participant.ID)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error executing update participant %s", err)
 			}
+			participant.Role = role
 		}
 	}
 
 	return &participant, nil
+}
+
+func (grp *Group) AddOrUpdateParticipant(tx *sql.Tx, jid *types.JID, role ParticipantRole) (*Participant, error) {
+	return addOrUpdateGroupParticipant(tx, grp, jid, role)
+}
+
+func (grp *Group) SaveGroupSettings() error {
+	db := database.GetDB()
+	if grp.Settings == nil {
+		grp.Settings = &GroupSettings{}
+		_, err := db.Exec("INSERT INTO group_settings (id) VALUES id = $1", grp.ID)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	groupSettings := *grp.Settings
+
+	_, err := db.Exec(UPDATE_GROUP_SETTINGS, grp.ID, pq.Array(groupSettings.ChosenShipping), groupSettings.LastShippingTime)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func SaveOrUpdateGroup(client *whatsmeow.Client, jid *types.JID) (*Group, error) {
