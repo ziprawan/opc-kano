@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	_ "github.com/lib/pq"
 	"go.mau.fi/whatsmeow"
@@ -19,12 +20,14 @@ import (
 	handlers "kano/internals/handlers"
 	projectConfig "kano/internals/project_config"
 	"kano/internals/utils/account"
+	"kano/internals/utils/data"
 	webhandlers "kano/web_handlers"
 )
 
 // Still copied from whatsmeow's example
 // Gonna tidy up later after learn enough about Go
 func main() {
+	data.LoadAllMaps()
 	conf := projectConfig.LoadConfig()
 	db := database.GetDB()
 	acc := account.InitAccount(conf.SessionName)
@@ -65,10 +68,7 @@ func main() {
 			client.SendPresence(types.PresenceAvailable)
 		case *events.Contact:
 			marshal, err := json.MarshalIndent(v, "", "  ")
-			if err != nil {
-				fmt.Println("Nigga")
-			}
-			fmt.Println("Got new contact event: ", string(marshal))
+			fmt.Println("Got new contact event: ", string(marshal), err)
 		case *events.PairSuccess:
 			err := account.SaveAccount(conf.SessionName, &v.ID)
 			if err != nil {
@@ -89,6 +89,11 @@ func main() {
 		case *events.GroupInfo:
 			marsh, _ := json.MarshalIndent(v, "", "  ")
 			fmt.Println(string(marsh))
+			handlers.GroupInfoHandler(client, v)
+		case *events.UndecryptableMessage:
+			if v.UnavailableType == events.UnavailableTypeViewOnce {
+				client.MarkRead([]types.MessageID{v.Info.ID}, time.Now(), v.Info.Chat, v.Info.Sender, types.ReceiptTypePlayed)
+			}
 		}
 	}
 
@@ -118,9 +123,9 @@ func main() {
 	webhandlers.Web()
 
 	// Listen to Ctrl+C (you can also do something else that prevents the program from exiting)
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	<-c
+	sign := make(chan os.Signal, 1)
+	signal.Notify(sign, os.Interrupt, syscall.SIGTERM)
+	<-sign
 
 	client.Disconnect()
 }
