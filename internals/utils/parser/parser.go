@@ -38,7 +38,7 @@ func (p Parser) GetCommand() Command {
 	for _, prefix := range p.Prefixes {
 		if strings.HasPrefix(p.Text, prefix) {
 			firstSplit := strings.Fields(p.Text)[0]
-			command := strings.Replace(firstSplit, prefix, "", 1)
+			command := strings.ToLower(strings.Replace(firstSplit, prefix, "", 1))
 
 			return Command{Command: command, UsedPrefix: prefix, FullCommand: firstSplit}
 		}
