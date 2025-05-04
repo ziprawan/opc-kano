@@ -18,7 +18,12 @@ func (m Message) ID() *string {
 }
 
 func (m Message) ChatJID() *types.JID {
-	return &m.Event.Info.Chat
+	chat := m.Event.Info.Chat
+	if chat.ToNonAD().String() == "status@broadcast" {
+		return m.SenderJID()
+	}
+
+	return &chat
 }
 
 func (m Message) SenderJID() *types.JID {
@@ -115,7 +120,7 @@ func (m Message) Marshal() (string, error) {
 	return marshal(m.Event)
 }
 
-func (m Message) ResolveReplyMessage(force_save bool) (*Message, error) {
+func (m Message) ResolveReplyMessage(forceSave bool) (*Message, error) {
 	msg := m.Event.RawMessage
 
 	if extend := msg.ExtendedTextMessage; extend != nil {
@@ -144,10 +149,15 @@ func (m Message) ResolveReplyMessage(force_save bool) (*Message, error) {
 						Message:    quoted,
 						RawMessage: quoted,
 					},
+					Group:   m.Group,
+					Contact: m.Contact,
 				}
 
-				if force_save {
-					replMsg.SaveToDatabase()
+				if forceSave {
+					err := replMsg.SaveToDatabase()
+					if err != nil {
+						fmt.Println("[ResolveReplyMessage()] Failed to save reply message to database", err)
+					}
 				}
 
 				return &replMsg, nil
@@ -168,11 +178,13 @@ func (m Message) ResolveReactedMessage() (*Message, error) {
 	msg := m.Event.RawMessage
 	react := msg.ReactionMessage
 	if react == nil {
+		fmt.Println("[ResolveReactedMessage()] Message is not a ReactionMessage")
 		return nil, nil
 	}
 
 	key := react.Key
 	if key == nil {
+		fmt.Println("[ResolveReactedMessage()] ReactionMessage has no Key field which is weird")
 		return nil, nil
 	}
 
@@ -183,6 +195,7 @@ func (m Message) ResolveReactedMessage() (*Message, error) {
 
 	sender, err := types.ParseJID(actualSender)
 	if err != nil {
+		fmt.Println("[ResolveReactedMessage()] Failed to parse SenderJID")
 		return nil, err
 	}
 
@@ -192,13 +205,16 @@ func (m Message) ResolveReactedMessage() (*Message, error) {
 	err = db.QueryRow("SELECT raw FROM message_with_jid WHERE message_id = $1 AND entity_jid = $2 AND account_id = $3", *key.ID, m.ChatJID().String(), acc.ID).Scan(&raw)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			fmt.Println("[ResolveReactedMessage()] Cannot find reacted message from database")
 			return nil, nil
 		}
+		fmt.Println("[ResolveReactedMessage()] Errored when scanning result", err)
 		return nil, err
 	}
 
 	err = json.Unmarshal([]byte(raw), &dbMsg)
 	if err != nil {
+		fmt.Println("[ResolveReactedMessage()] Errored when Unmarshal json")
 		return nil, err
 	}
 
@@ -216,6 +232,8 @@ func (m Message) ResolveReactedMessage() (*Message, error) {
 			Message:    dbMsg.Message,
 			RawMessage: dbMsg.RawMessage,
 		},
+		Group:   m.Group,
+		Contact: m.Contact,
 	}
 
 	return &rectMsg, nil

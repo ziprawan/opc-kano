@@ -11,7 +11,7 @@ var (
 
 // Internal function of SaveToDatabase()
 // Parameter required
-func saveToDatabase(m Message) error {
+func saveToDatabase(m *Message) error {
 	db := database.GetDB()
 
 	raw, err := m.Marshal()

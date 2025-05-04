@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"kano/internals/database"
 	"kano/internals/utils/account"
+	"kano/internals/utils/kanoutils"
 	"time"
 
 	"go.mau.fi/whatsmeow"
@@ -19,20 +20,35 @@ import (
 
 // Helper functions
 
-func (m Message) Upload(content []byte, mediaType whatsmeow.MediaType) (whatsmeow.UploadResponse, error) {
+func (m *Message) Upload(content []byte, mediaType whatsmeow.MediaType) (whatsmeow.UploadResponse, error) {
 	return m.Client.Upload(context.Background(), content, mediaType)
 }
 
-func (m Message) EditText(text string) (*whatsmeow.SendResponse, error) {
+func (m *Message) EditText(text string) (*Message, error) {
 	var msg *waE2E.Message = m.Client.BuildEdit(*m.ChatJID(), *m.ID(), &waE2E.Message{
 		Conversation: proto.String(text),
 	})
+	acc, _ := account.GetData()
 
 	jjj, sss := json.MarshalIndent(msg, "", "  ")
 	fmt.Println(string(jjj), sss)
 
 	resp, err := m.Client.SendMessage(context.Background(), *m.ChatJID(), msg)
-	return &resp, err
+	craftedMsg := Message{Client: m.Client, Group: m.Group, Contact: m.Contact, Event: &events.Message{
+		Info: types.MessageInfo{
+			MessageSource: types.MessageSource{
+				Chat:     *m.ChatJID(),
+				Sender:   *acc.JID,
+				IsFromMe: true,
+			},
+			PushName: acc.PushName,
+			ID:       resp.ID,
+		},
+		Message:    msg,
+		RawMessage: msg,
+	}}
+	craftedMsg.SaveToDatabase()
+	return &craftedMsg, err
 }
 
 func GetFutureProof(m *waE2E.Message) *waE2E.FutureProofMessage {
@@ -58,6 +74,9 @@ func GetFutureProof(m *waE2E.Message) *waE2E.FutureProofMessage {
 }
 
 func removeContextInfo(m *waE2E.Message) {
+	if m == nil {
+		return
+	}
 	if k := m.ImageMessage; k != nil {
 		k.ContextInfo = nil
 	} else if k := m.ContactMessage; k != nil {
@@ -136,7 +155,7 @@ func (m *Message) getCleanQuotedMessage() (content *waE2E.Message) {
 	return
 }
 
-func (m Message) Reply(text string, quoted bool) (*whatsmeow.SendResponse, error) {
+func (m *Message) Reply(text string, quoted bool) (*Message, error) {
 	acc, err := account.GetData()
 	if err != nil {
 		return nil, err
@@ -162,8 +181,7 @@ func (m Message) Reply(text string, quoted bool) (*whatsmeow.SendResponse, error
 	fmt.Printf("==========\nID: %s\nSender: %s\nRaw Message: %+v\nMsg to send: %+v\n==========", *m.ID(), sender, m.Event.RawMessage, &msg)
 
 	sent, err := m.Client.SendMessage(context.Background(), *m.ChatJID(), &msg)
-
-	saveToDatabase(Message{Client: m.Client, Event: &events.Message{
+	craftedMsg := Message{Client: m.Client, Group: m.Group, Contact: m.Contact, Event: &events.Message{
 		Info: types.MessageInfo{
 			MessageSource: types.MessageSource{
 				Chat:     *m.ChatJID(),
@@ -175,12 +193,18 @@ func (m Message) Reply(text string, quoted bool) (*whatsmeow.SendResponse, error
 		},
 		Message:    &msg,
 		RawMessage: &msg,
-	}})
+	}}
+	fmt.Printf("%+v\n", sent)
+	saveErr := saveToDatabase(&craftedMsg)
 
-	return &sent, err
+	if saveErr != nil {
+		fmt.Println("[Reply] Failed to save to database", saveErr)
+	}
+
+	return &craftedMsg, err
 }
 
-func (m Message) ReplyWithTags(text string, tags []string) (*whatsmeow.SendResponse, error) {
+func (m *Message) ReplyWithTags(text string, tags []string) (*whatsmeow.SendResponse, error) {
 	acc, err := account.GetData()
 	if err != nil {
 		return nil, err
@@ -204,7 +228,7 @@ func (m Message) ReplyWithTags(text string, tags []string) (*whatsmeow.SendRespo
 
 	sent, err := m.Client.SendMessage(context.Background(), *m.ChatJID(), &msg)
 
-	saveToDatabase(Message{Client: m.Client, Event: &events.Message{
+	saveToDatabase(&Message{Client: m.Client, Group: m.Group, Contact: m.Contact, Event: &events.Message{
 		Info: types.MessageInfo{
 			MessageSource: types.MessageSource{
 				Chat:     *m.ChatJID(),
@@ -221,15 +245,13 @@ func (m Message) ReplyWithTags(text string, tags []string) (*whatsmeow.SendRespo
 	return &sent, err
 }
 
-func (m Message) ReplyImage(content []byte, mimeType string, caption string, quoted bool) (*whatsmeow.SendResponse, error) {
+func (m *Message) ReplyImage(content []byte, op ReplyImageOptions) (*whatsmeow.SendResponse, error) {
 	resp, err := m.Upload(content, whatsmeow.MediaImage)
 	if err != nil {
 		return nil, err
 	}
 
 	imgMsg := &waE2E.ImageMessage{
-		Caption:       proto.String(caption),
-		Mimetype:      proto.String(mimeType),
 		URL:           &resp.URL,
 		DirectPath:    &resp.DirectPath,
 		MediaKey:      resp.MediaKey,
@@ -239,7 +261,7 @@ func (m Message) ReplyImage(content []byte, mimeType string, caption string, quo
 	}
 	sender := m.SenderJID().String()
 
-	if quoted {
+	if op.Quoted {
 		content := m.getCleanQuotedMessage()
 		imgMsg.ContextInfo = &waE2E.ContextInfo{
 			StanzaID:      m.ID(),
@@ -247,15 +269,48 @@ func (m Message) ReplyImage(content []byte, mimeType string, caption string, quo
 			QuotedMessage: content,
 		}
 	}
+	// MimeType option, override the default mimetype field ("image/jpeg")
+	if op.MimeType != "" {
+		imgMsg.Mimetype = &op.MimeType
+	} else {
+		imgMsg.Mimetype = proto.String("image/jpeg")
+	}
+	// Caption option, add caption to the video
+	if op.Caption != "" {
+		imgMsg.Caption = &op.Caption
+	}
+	if op.DontGenerateInfo { // If both Height and Width are specified (not 0), set the video height and width
+		if op.Height != 0 && op.Width != 0 {
+			imgMsg.Height = &op.Height
+			imgMsg.Width = &op.Width
+		}
+		if len(op.JPEGThumbnail) != 0 {
+			imgMsg.JPEGThumbnail = op.JPEGThumbnail
+		}
+	} else {
+		info, err := kanoutils.GenerateImageInfo(content)
+		if err != nil {
+			fmt.Println("reply_video: Failed to generate video info:", err.Error())
+		} else {
+			imgMsg.Height = &info.Height
+			imgMsg.Width = &info.Width
+			imgMsg.JPEGThumbnail = info.JPEGThumbnail
+		}
+	}
 
-	sent, err := m.Client.SendMessage(context.Background(), *m.ChatJID(), &waE2E.Message{
+	targetJID := *m.ChatJID()
+	if op.TargetJID != nil {
+		targetJID = *op.TargetJID
+	}
+
+	sent, err := m.Client.SendMessage(context.Background(), targetJID, &waE2E.Message{
 		ImageMessage: imgMsg,
 	})
 
 	return &sent, err
 }
 
-func (m Message) ReplyVideo(content []byte, mimeType string, caption string, quoted bool) (*whatsmeow.SendResponse, error) {
+func (m *Message) ReplyVideo(content []byte, op ReplyVideoOptions) (*whatsmeow.SendResponse, error) {
 	resp, err := m.Upload(content, whatsmeow.MediaVideo)
 	if err != nil {
 		return nil, err
@@ -266,8 +321,6 @@ func (m Message) ReplyVideo(content []byte, mimeType string, caption string, quo
 	sender := m.SenderJID().String()
 
 	msg.VideoMessage = &waE2E.VideoMessage{
-		Caption:       proto.String(caption),
-		Mimetype:      proto.String(mimeType),
 		URL:           &resp.URL,
 		DirectPath:    &resp.DirectPath,
 		MediaKey:      resp.MediaKey,
@@ -275,8 +328,10 @@ func (m Message) ReplyVideo(content []byte, mimeType string, caption string, quo
 		FileSHA256:    resp.FileSHA256,
 		FileLength:    &resp.FileLength,
 	}
+	msgId := m.Client.GenerateMessageID()
 
-	if quoted {
+	// Quoted option, reply to context message
+	if op.Quoted {
 		content := m.getCleanQuotedMessage()
 		msg.VideoMessage.ContextInfo = &waE2E.ContextInfo{
 			StanzaID:      m.ID(),
@@ -284,12 +339,54 @@ func (m Message) ReplyVideo(content []byte, mimeType string, caption string, quo
 			QuotedMessage: content,
 		}
 	}
+	// MimeType option, override the default mimetype field ("video/mp4")
+	if op.MimeType != "" {
+		msg.VideoMessage.Mimetype = &op.MimeType
+	} else {
+		msg.VideoMessage.Mimetype = proto.String("video/mp4")
+	}
+	// Caption option, add caption to the video
+	if op.Caption != "" {
+		msg.VideoMessage.Caption = &op.Caption
+	}
+	if op.DontGenerateInfo { // If both Height and Width are specified (not 0), set the video height and width
+		if op.Height != 0 && op.Width != 0 {
+			msg.VideoMessage.Height = &op.Height
+			msg.VideoMessage.Width = &op.Width
+		}
+		// Seconds option, override the detected duration length of the video
+		// Eh, but, ..., what if the duration is actually ZERO?
+		// If you didn'y specify it, it will use 0 duration tho, nothing changes
+		if op.Seconds != 0 {
+			msg.VideoMessage.Seconds = &op.Seconds
+		}
+		if len(op.JPEGThumbnail) != 0 {
+			msg.VideoMessage.JPEGThumbnail = op.JPEGThumbnail
+		}
+	} else {
+		info, err := kanoutils.GenerateVideoInfo(content)
+		if err != nil {
+			fmt.Println("reply_video: Failed to generate video info:", err.Error())
+		} else {
+			msg.VideoMessage.Seconds = &info.Duration
+			msg.VideoMessage.Height = &info.Height
+			msg.VideoMessage.Width = &info.Width
+			msg.VideoMessage.JPEGThumbnail = info.JPEGThumbnail
+		}
+	}
 
-	sent, err := m.Client.SendMessage(context.Background(), *m.ChatJID(), &msg)
+	targetJID := *m.ChatJID()
+	if op.TargetJID != nil {
+		targetJID = *op.TargetJID
+	}
+
+	sent, err := m.Client.SendMessage(context.Background(), targetJID, &msg, whatsmeow.SendRequestExtra{
+		ID: msgId,
+	})
 	return &sent, err
 }
 
-func (m Message) ReplyAudio(content []byte, mimeType string, quoted bool) (*whatsmeow.SendResponse, error) {
+func (m *Message) ReplyAudio(content []byte, mimeType string, quoted bool) (*whatsmeow.SendResponse, error) {
 	resp, err := m.Upload(content, whatsmeow.MediaAudio)
 	if err != nil {
 		return nil, err
@@ -322,7 +419,7 @@ func (m Message) ReplyAudio(content []byte, mimeType string, quoted bool) (*what
 	return &sent, err
 }
 
-func (m Message) ReplySticker(content []byte, quoted bool) (*whatsmeow.SendResponse, error) {
+func (m *Message) ReplySticker(content []byte, quoted bool) (*whatsmeow.SendResponse, error) {
 	resp, err := m.Upload(content, whatsmeow.MediaImage)
 	if err != nil {
 		return nil, err
@@ -360,15 +457,15 @@ func (m Message) ReplySticker(content []byte, quoted bool) (*whatsmeow.SendRespo
 	return &sent, err
 }
 
-func (m Message) MarkRead() {
-	m.Client.MarkRead([]types.MessageID{*m.ID()}, time.Now(), *m.ChatJID(), *m.SenderJID())
+func (m *Message) MarkRead() {
+	m.Client.MarkRead([]types.MessageID{*m.ID()}, time.Now(), m.Event.Info.Chat, *m.SenderJID())
 }
 
-func (m Message) SaveToDatabase() error {
+func (m *Message) SaveToDatabase() error {
 	return saveToDatabase(m)
 }
 
-func (m Message) GetMessage(msgId string, jid *types.JID) (*Message, error) {
+func (m *Message) GetMessage(msgId string, jid *types.JID) (*Message, error) {
 	db := database.GetDB()
 	acc, err := account.GetData()
 	if err != nil {
