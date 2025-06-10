@@ -210,6 +210,13 @@ func SaveOrUpdateContact(contact *Contact) (*Contact, error) {
 			return nil, err
 		}
 	}
+
+	err = tx.Commit()
+	if err != nil {
+		fmt.Println("Failed to commit transaction:", err)
+		return nil, err
+	}
+
 	contact.ID = contactId
 	contact.EntityID = entId
 	contact.AccountID = acc.ID

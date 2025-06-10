@@ -1,6 +1,7 @@
 package account
 
 import (
+	"database/sql"
 	"errors"
 	"kano/internals/database"
 	"sync"
@@ -9,15 +10,15 @@ import (
 )
 
 type KanoAccount struct {
-	ID       int64
-	Name     string
-	JID      *types.JID
-	PushName string
+	ID        int64
+	Name      string
+	JID       *types.JID
+	PushName  string
+	LoggedOut bool
 }
 
 var (
 	accInstance *KanoAccount
-	initErr     error
 	once        sync.Once
 
 	ErrAccNotFound = errors.New("cannot find account at your database")
@@ -38,15 +39,20 @@ func InitAccount(accountName string) *KanoAccount {
 			&acc.ID,
 			&acc.Name,
 			&jid,
+			&acc.LoggedOut,
 		)
 
 		if err != nil {
-			initErr = err
+			if errors.Is(err, sql.ErrNoRows) {
+				return
+			}
+
+			panic(err)
 		}
 
 		parsed, err := types.ParseJID(jid)
 		if err != nil {
-			initErr = err
+			panic(err)
 		}
 
 		acc.JID = &parsed
@@ -87,5 +93,5 @@ func SetPushName(pushName string) {
 }
 
 func GetData() (*KanoAccount, error) {
-	return accInstance, initErr
+	return accInstance, nil
 }

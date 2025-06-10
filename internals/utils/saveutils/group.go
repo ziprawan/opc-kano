@@ -360,6 +360,7 @@ func (grp *Group) SaveGroupSettings() error {
 }
 
 func SaveOrUpdateGroup(client *whatsmeow.Client, jid *types.JID) (*Group, error) {
+	fmt.Println("save or update group called")
 	if client == nil || jid == nil {
 		return nil, ErrNilArguments
 	}
@@ -396,7 +397,7 @@ func SaveOrUpdateGroup(client *whatsmeow.Client, jid *types.JID) (*Group, error)
 		return nil, err
 	}
 	if scannedEntId == nil {
-		err = tx.QueryRow("INSERT INTO entity VALUES (DEFAULT, 'GROUP'::chat_type, $2, $1) ON CONFLICT (jid, account_id) DO UPDATE SET jid = $2 RETURNING id", acc.ID, jid.String).Scan(&entId)
+		err = tx.QueryRow("INSERT INTO entity VALUES (DEFAULT, 'GROUP'::chat_type, $2, $1) ON CONFLICT (jid, account_id) DO UPDATE SET jid = $2 RETURNING id", acc.ID, jid.String()).Scan(&entId)
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
 				fmt.Fprintln(os.Stderr, "failed to scan INSERT ENTITY result", err)
@@ -424,7 +425,7 @@ func SaveOrUpdateGroup(client *whatsmeow.Client, jid *types.JID) (*Group, error)
 		}
 		err = insertStatement.QueryRow(
 			&acc.ID,
-			&scannedEntId,
+			&entId,
 			&p.JID,
 			&p.OwnerJID,
 			&p.Name,
@@ -500,7 +501,7 @@ func SaveOrUpdateGroup(client *whatsmeow.Client, jid *types.JID) (*Group, error)
 	group := Group{
 		ID:                            grpID,
 		AccountID:                     acc.ID,
-		EntityID:                      *scannedEntId,
+		EntityID:                      entId,
 		CreatedAt:                     createdAt,
 		UpdatedAt:                     updatedAt,
 		OwnerJID:                      p.OwnerJID.String(),
@@ -544,6 +545,12 @@ func SaveOrUpdateGroup(client *whatsmeow.Client, jid *types.JID) (*Group, error)
 			fmt.Fprintln(os.Stderr, "failed to add or update group participant", err)
 			return nil, err
 		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		fmt.Println("failed to commit group transaction:", err)
+		return nil, err
 	}
 
 	return &group, nil
