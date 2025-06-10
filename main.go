@@ -78,7 +78,7 @@ func main() {
 			fmt.Println("Pair QR Success and account added to database!")
 		case *events.LoggedOut:
 			if v.Reason == events.ConnectFailureLoggedOut {
-				res, err := db.Exec("DELETE FROM account WHERE name = $1", conf.SessionName)
+				res, err := db.Exec("UPDATE account SET logged_out = true WHERE name = $1", conf.SessionName)
 				if err != nil {
 					panic(err)
 				}
