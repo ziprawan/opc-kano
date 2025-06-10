@@ -1,0 +1,3 @@
+BEGIN;
+ALTER TABLE IF EXISTS group_title DROP COLUMN IF EXISTS caller_admin_only;
+COMMIT;

@@ -1,0 +1,4 @@
+BEGIN;
+ALTER TABLE IF EXISTS group_title
+ADD COLUMN caller_admin_only BOOLEAN;
+COMMIT;
