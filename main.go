@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -40,9 +41,12 @@ func main() {
 	}
 
 	// If you want multiple sessions, remember their JIDs and use .GetDevice(jid) or .GetAllDevices() instead.
-	deviceStore, err := container.GetDevice(*acc.JID)
-	if err != nil {
-		panic(err)
+	var deviceStore *store.Device
+	if acc != nil {
+		deviceStore, err = container.GetDevice(*acc.JID)
+		if err != nil {
+			panic(err)
+		}
 	}
 	if deviceStore == nil {
 		deviceStore = container.NewDevice()

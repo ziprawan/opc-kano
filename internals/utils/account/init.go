@@ -10,11 +10,10 @@ import (
 )
 
 type KanoAccount struct {
-	ID        int64
-	Name      string
-	JID       *types.JID
-	PushName  string
-	LoggedOut bool
+	ID       int64
+	Name     string
+	JID      *types.JID
+	PushName string
 }
 
 var (
@@ -27,8 +26,9 @@ var (
 func InitAccount(accountName string) *KanoAccount {
 	once.Do(func() {
 		var (
-			acc *KanoAccount
-			jid string
+			acc        *KanoAccount
+			jid        string
+			logged_out bool
 		)
 
 		acc = &KanoAccount{}
@@ -39,7 +39,7 @@ func InitAccount(accountName string) *KanoAccount {
 			&acc.ID,
 			&acc.Name,
 			&jid,
-			&acc.LoggedOut,
+			&logged_out,
 		)
 
 		if err != nil {
@@ -48,6 +48,11 @@ func InitAccount(accountName string) *KanoAccount {
 			}
 
 			panic(err)
+		}
+
+		if logged_out {
+			acc = nil
+			return
 		}
 
 		parsed, err := types.ParseJID(jid)
