@@ -87,6 +87,39 @@ func sendConfessMessage(ctx *MessageContext, jid types.JID) {
 	})
 }
 
+func getUserJoinedGroups(sender_jid string) ([]GroupIDJID, error) {
+	db := database.GetDB()
+	acc, _ := account.GetData()
+	rows, err := db.Query("SELECT g.id, g.jid, g.name FROM participant p INNER JOIN contact c ON c.id = p.contact_id INNER JOIN \"group\" g ON g.id = p.group_id AND g.is_incognito != true AND p.role != 'LEFT' WHERE g.account_id = $1 AND c.jid = $2 ORDER BY p.group_id ASC", acc.ID, sender_jid)
+	if err != nil {
+		fmt.Println("confess: getUserJoinedGroups: Failed to build query:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var jid []GroupIDJID
+	for rows.Next() {
+		var id int64
+		var j, name string
+		if err := rows.Scan(&id, &j, &name); err != nil {
+			fmt.Println("confess: getUserJoinedGroups: Failed to scan result:", err)
+			return nil, err
+		}
+		parsed, err := types.ParseJID(j)
+		if err != nil {
+			fmt.Println("confess: getUserJoinedGroups: Failed to parse JID", err)
+			return nil, err
+		}
+		jid = append(jid, GroupIDJID{
+			ID:   id,
+			JID:  parsed,
+			Name: name,
+		})
+	}
+
+	return jid, nil
+}
+
 func ConfessTargetHandler(ctx *MessageContext) {
 	if ctx.Instance.Event.Info.Chat.Server != types.DefaultUserServer {
 		return
@@ -94,7 +127,18 @@ func ConfessTargetHandler(ctx *MessageContext) {
 
 	args := ctx.Parser.GetArgs()
 	if len(args) == 0 {
-		ctx.Instance.Reply("Kirimkan ID grup yang ingin dijadikan target confess", true)
+		jids, err := getUserJoinedGroups(ctx.Instance.SenderJID().String())
+		if err != nil {
+			ctx.Instance.Reply("Something went wrong", true)
+			return
+		}
+
+		msg := "Kirimkan ID grup yang ingin dijadikan target confess\nBerikut list grup yang ada _(format: [id]. [nama grup])_ :\n\n"
+		for _, j := range jids {
+			msg += fmt.Sprintf("%d. %s\n", j.ID, j.Name)
+		}
+
+		ctx.Instance.Reply(msg, true)
 		return
 	}
 
@@ -106,7 +150,7 @@ func ConfessTargetHandler(ctx *MessageContext) {
 
 	db := database.GetDB()
 	var name string
-	err = db.QueryRow("SELECT g.name FROM \"group\" g WHERE g.id = $1", id).Scan(&name)
+	err = db.QueryRow("SELECT g.name FROM participant p INNER JOIN \"group\" g ON p.group_id = $1 AND p.role != 'LEFT' AND p.contact_id = $2", id, ctx.Instance.Contact.ID).Scan(&name)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.Instance.Reply("Grup tidak ditemukan", true)
@@ -134,15 +178,6 @@ func ConfessHandler(ctx *MessageContext) {
 		return
 	}
 
-	db := database.GetDB()
-	// conf := projectconfig.GetConfig()
-	acc, err := account.GetData()
-	if err != nil {
-		fmt.Println(err)
-		ctx.Instance.Reply("Internal server error [-1]", true)
-		return
-	}
-
 	// if ctx.Instance.SenderJID().User != conf.OwnerJID.User {
 	// 	ctx.Instance.Reply("Under maintenance.", true)
 	// 	return
@@ -159,32 +194,10 @@ func ConfessHandler(ctx *MessageContext) {
 		return
 	}
 
-	var jid []GroupIDJID
-	rows, err := db.Query("SELECT g.id, g.jid, g.name FROM participant p INNER JOIN contact c ON c.id = p.contact_id INNER JOIN \"group\" g ON g.id = p.group_id AND g.is_incognito != true WHERE g.account_id = $1 AND c.jid = $2 ORDER BY p.group_id ASC", acc.ID, ctx.Instance.SenderJID().String())
+	jid, err := getUserJoinedGroups(ctx.Instance.SenderJID().String())
 	if err != nil {
-		fmt.Println(err)
-		ctx.Instance.Reply("Internal server error [1]", true)
+		ctx.Instance.Reply("Internal server error [2]", true)
 		return
-	}
-	for rows.Next() {
-		var id int64
-		var j, name string
-		if err := rows.Scan(&id, &j, &name); err != nil {
-			fmt.Println(err)
-			ctx.Instance.Reply("Internal server error [2]", true)
-			return
-		}
-		parsed, err := types.ParseJID(j)
-		if err != nil {
-			fmt.Println(err)
-			ctx.Instance.Reply("Internal server error [3]", true)
-			return
-		}
-		jid = append(jid, GroupIDJID{
-			ID:   id,
-			JID:  parsed,
-			Name: name,
-		})
 	}
 	if len(jid) == 0 {
 		ctx.Instance.Reply("Saya ga pernah lihat kamu di grup manapun, hmm", true)

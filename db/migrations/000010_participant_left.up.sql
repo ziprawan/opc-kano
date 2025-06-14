@@ -1,0 +1,5 @@
+BEGIN;
+ALTER TYPE public.participant_role
+ADD VALUE 'LEFT'
+AFTER 'MANAGER';
+COMMIT;
