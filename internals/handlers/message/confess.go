@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"kano/internals/database"
 	"kano/internals/utils/account"
+	"kano/internals/utils/messageutils"
 	"strconv"
-	"strings"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
+	"google.golang.org/protobuf/proto"
 )
 
 type GroupIDJID struct {
@@ -75,22 +77,121 @@ func saveUserConfessTarget(jid types.JID, targetID int64) error {
 }
 
 func sendConfessMessage(ctx *MessageContext, jid types.JID) {
-	args := ctx.Parser.GetArgs()
-	if len(args) == 0 {
-		ctx.Instance.Reply("Beri pesannya dong kak (belum support media lagi)", true)
-		return
+	var mediaMessage *waE2E.Message
+	var hasReply, needReply bool
+
+	msg := ctx.Instance.Event.RawMessage
+	if ext := msg.ExtendedTextMessage; ext != nil {
+		if ctxInfo := ext.ContextInfo; ctxInfo != nil {
+			if replied := ctxInfo.QuotedMessage; replied != nil {
+				msg = ctxInfo.QuotedMessage
+				hasReply = true
+			}
+		}
 	}
 
-	confessMsg := "Ada konfes dari seseorang nih!\n" + strings.Replace(ctx.Parser.Text, ctx.Parser.GetCommand().FullCommand, "", 1)
-	ctx.Instance.Client.SendMessage(context.Background(), jid, &waE2E.Message{
-		Conversation: &confessMsg,
-	})
+	args := ctx.Parser.GetArgs()
+	instance := messageutils.Message{
+		Event: &events.Message{
+			RawMessage: msg,
+		},
+	}
+	confessCaption := "Ada konfes dari seseorang nih!\n"
+	if cap := instance.Caption(); hasReply && len(cap) != 0 {
+		confessCaption += cap
+	} else {
+		if len(args) == 0 {
+			ctx.Instance.Reply("Beri pesannya dong kak (dukungan media sudah bisa namun masih tahap uji coba)", true)
+			return
+		} else {
+			confessCaption += ctx.Parser.Text[args[0].Start:]
+		}
+	}
+
+	if vid := msg.GetVideoMessage(); vid != nil {
+		mediaMessage = &waE2E.Message{
+			VideoMessage: &waE2E.VideoMessage{
+				URL:           vid.URL,
+				DirectPath:    vid.DirectPath,
+				MediaKey:      vid.MediaKey,
+				FileEncSHA256: vid.FileEncSHA256,
+				FileSHA256:    vid.FileSHA256,
+				FileLength:    vid.FileLength,
+				Caption:       &confessCaption,
+				Mimetype:      vid.Mimetype,
+			},
+		}
+	} else if img := msg.GetImageMessage(); img != nil {
+		mediaMessage = &waE2E.Message{
+			ImageMessage: &waE2E.ImageMessage{
+				URL:           img.URL,
+				DirectPath:    img.DirectPath,
+				MediaKey:      img.MediaKey,
+				FileEncSHA256: img.FileEncSHA256,
+				FileSHA256:    img.FileSHA256,
+				FileLength:    img.FileLength,
+				Caption:       &confessCaption,
+				Mimetype:      img.Mimetype,
+			},
+		}
+	} else if aud := msg.GetAudioMessage(); aud != nil {
+		needReply = true
+		mediaMessage = &waE2E.Message{
+			AudioMessage: &waE2E.AudioMessage{
+				URL:           aud.URL,
+				DirectPath:    aud.DirectPath,
+				MediaKey:      aud.MediaKey,
+				FileEncSHA256: aud.FileEncSHA256,
+				FileSHA256:    aud.FileSHA256,
+				FileLength:    aud.FileLength,
+				Mimetype:      aud.Mimetype,
+			},
+		}
+	} else if stk := msg.GetStickerMessage(); stk != nil {
+		needReply = true
+		mediaMessage = &waE2E.Message{
+			StickerMessage: &waE2E.StickerMessage{
+				URL:           stk.URL,
+				DirectPath:    stk.DirectPath,
+				MediaKey:      stk.MediaKey,
+				FileEncSHA256: stk.FileEncSHA256,
+				FileSHA256:    stk.FileSHA256,
+				FileLength:    stk.FileLength,
+				Mimetype:      stk.Mimetype,
+			},
+		}
+	}
+
+	if mediaMessage != nil {
+		resp, err := ctx.Instance.Client.SendMessage(context.Background(), jid, mediaMessage)
+		if err != nil {
+			fmt.Println("confess: Failed to send media message")
+			return
+		}
+		if needReply {
+			ctx.Instance.Client.SendMessage(context.Background(), jid, &waE2E.Message{
+				ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+					Text: &confessCaption,
+					ContextInfo: &waE2E.ContextInfo{
+						StanzaID:      proto.String(resp.ID),
+						Participant:   proto.String(resp.Sender.String()),
+						QuotedMessage: mediaMessage,
+					},
+				},
+			})
+		}
+	} else {
+		ctx.Instance.Client.SendMessage(context.Background(), jid, &waE2E.Message{
+			Conversation: &confessCaption,
+		})
+	}
+
 }
 
-func getUserJoinedGroups(sender_jid string) ([]GroupIDJID, error) {
+func getUserJoinedGroups(senderJid string) ([]GroupIDJID, error) {
 	db := database.GetDB()
 	acc, _ := account.GetData()
-	rows, err := db.Query("SELECT g.id, g.jid, g.name FROM participant p INNER JOIN contact c ON c.id = p.contact_id INNER JOIN \"group\" g ON g.id = p.group_id AND g.is_incognito != true AND p.role != 'LEFT' WHERE g.account_id = $1 AND c.jid = $2 ORDER BY p.group_id ASC", acc.ID, sender_jid)
+	rows, err := db.Query("SELECT g.id, g.jid, g.name FROM participant p INNER JOIN contact c ON c.id = p.contact_id INNER JOIN \"group\" g ON g.id = p.group_id AND g.is_incognito != true AND p.role != 'LEFT' WHERE g.account_id = $1 AND c.jid = $2 ORDER BY p.group_id ASC", acc.ID, senderJid)
 	if err != nil {
 		fmt.Println("confess: getUserJoinedGroups: Failed to build query:", err)
 		return nil, err

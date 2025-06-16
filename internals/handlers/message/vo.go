@@ -60,7 +60,6 @@ func voStartDownload(instance *messageutils.Message, selectedMsg *waE2E.Message)
 		return
 	}
 	fmt.Printf("Reply pesannya: %+v\n", downloadableMsg)
-
 	downloaded_bytes, err := instance.Client.Download(downloadableMsg)
 	if err != nil {
 		fmt.Println("vo download error", err)

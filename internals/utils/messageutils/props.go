@@ -53,7 +53,7 @@ func (m Message) Conversation() string {
 
 func caption(ev *events.Message) string {
 	var caption string
-	if ev == nil || ev.Message == nil {
+	if ev == nil || ev.RawMessage == nil {
 		return caption
 	}
 
@@ -63,9 +63,9 @@ func caption(ev *events.Message) string {
 				caption = *f.Caption
 			}
 		}
-	} else if i := ev.Message.ImageMessage; i != nil && i.Caption != nil {
+	} else if i := ev.RawMessage.ImageMessage; i != nil && i.Caption != nil {
 		caption = *i.Caption
-	} else if v := ev.Message.VideoMessage; v != nil && v.Caption != nil {
+	} else if v := ev.RawMessage.VideoMessage; v != nil && v.Caption != nil {
 		caption = *v.Caption
 	}
 
