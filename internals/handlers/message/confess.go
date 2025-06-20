@@ -97,14 +97,14 @@ func sendConfessMessage(ctx *MessageContext, jid types.JID) {
 		},
 	}
 	confessCaption := "Ada konfes dari seseorang nih!\n"
-	if cap := instance.Caption(); hasReply && len(cap) != 0 {
-		confessCaption += cap
+	if len(args) > 0 {
+		confessCaption += ctx.Parser.Text[args[0].Start:]
 	} else {
-		if len(args) == 0 {
+		if cap := instance.Caption(); hasReply && len(cap) != 0 {
+			confessCaption += cap
+		} else {
 			ctx.Instance.Reply("Beri pesannya dong kak (dukungan media sudah bisa namun masih tahap uji coba)", true)
 			return
-		} else {
-			confessCaption += ctx.Parser.Text[args[0].Start:]
 		}
 	}
 
@@ -117,6 +117,9 @@ func sendConfessMessage(ctx *MessageContext, jid types.JID) {
 				FileEncSHA256: vid.FileEncSHA256,
 				FileSHA256:    vid.FileSHA256,
 				FileLength:    vid.FileLength,
+				Height:        vid.Height,
+				Width:         vid.Width,
+				JPEGThumbnail: vid.JPEGThumbnail,
 				Caption:       &confessCaption,
 				Mimetype:      vid.Mimetype,
 			},
@@ -130,6 +133,9 @@ func sendConfessMessage(ctx *MessageContext, jid types.JID) {
 				FileEncSHA256: img.FileEncSHA256,
 				FileSHA256:    img.FileSHA256,
 				FileLength:    img.FileLength,
+				Height:        img.Height,
+				Width:         img.Width,
+				JPEGThumbnail: img.JPEGThumbnail,
 				Caption:       &confessCaption,
 				Mimetype:      img.Mimetype,
 			},
@@ -157,6 +163,8 @@ func sendConfessMessage(ctx *MessageContext, jid types.JID) {
 				FileEncSHA256: stk.FileEncSHA256,
 				FileSHA256:    stk.FileSHA256,
 				FileLength:    stk.FileLength,
+				Height:        stk.Height,
+				Width:         stk.Width,
 				Mimetype:      stk.Mimetype,
 			},
 		}

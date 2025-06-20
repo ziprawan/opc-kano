@@ -72,7 +72,7 @@ func SaveAccount(accountName string, jid *types.JID) error {
 	db := database.GetDB()
 
 	var accID int64
-	stmt, err := db.Prepare("INSERT INTO account VALUES (DEFAULT, $1, $2) ON CONFLICT (name) DO UPDATE SET jid = $2 RETURNING id")
+	stmt, err := db.Prepare("INSERT INTO account VALUES (DEFAULT, $1, $2, DEFAULT) ON CONFLICT (name) DO UPDATE SET jid = $2, logged_out = false RETURNING id")
 	if err != nil {
 		return err
 	}

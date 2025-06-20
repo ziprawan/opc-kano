@@ -1,0 +1,4 @@
+BEGIN;
+ALTER TABLE account
+ADD COLUMN logged_out BOOLEAN DEFAULT false;
+COMMIT;
