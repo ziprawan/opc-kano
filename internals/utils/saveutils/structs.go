@@ -23,10 +23,10 @@ type Group struct {
 	Name                          string
 	NameSetAt                     time.Time
 	NameSetBy                     string
-	Topic                         string
-	TopicID                       string
-	TopicSetAt                    time.Time
-	TopicSetBy                    string
+	Topic                         sql.NullString
+	TopicID                       sql.NullString
+	TopicSetAt                    sql.NullTime
+	TopicSetBy                    sql.NullString
 	TopicDeleted                  bool
 	IsLocked                      bool
 	IsAnnounce                    bool
