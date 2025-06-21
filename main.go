@@ -34,7 +34,7 @@ func main() {
 	acc := account.InitAccount(conf.SessionName)
 
 	dbLog := waLog.Stdout("Database", "WARN", true)
-	container, err := sqlstore.New("postgres", conf.DatabaseURL, dbLog)
+	container, err := sqlstore.New(context.Background(), "postgres", conf.DatabaseURL, dbLog)
 
 	if err != nil {
 		panic(err)
@@ -43,7 +43,7 @@ func main() {
 	// If you want multiple sessions, remember their JIDs and use .GetDevice(jid) or .GetAllDevices() instead.
 	var deviceStore *store.Device
 	if acc != nil {
-		deviceStore, err = container.GetDevice(*acc.JID)
+		deviceStore, err = container.GetDevice(context.Background(), *acc.JID)
 		if err != nil {
 			panic(err)
 		}

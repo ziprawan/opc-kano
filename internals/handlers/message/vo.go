@@ -1,6 +1,7 @@
 package message
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -60,7 +61,7 @@ func voStartDownload(instance *messageutils.Message, selectedMsg *waE2E.Message)
 		return
 	}
 	fmt.Printf("Reply pesannya: %+v\n", downloadableMsg)
-	downloaded_bytes, err := instance.Client.Download(downloadableMsg)
+	downloaded_bytes, err := instance.Client.Download(context.Background(), downloadableMsg)
 	if err != nil {
 		fmt.Println("vo download error", err)
 		instance.Reply("Terjadi kesalahan saat mengunduh media!", true)
@@ -69,21 +70,22 @@ func voStartDownload(instance *messageutils.Message, selectedMsg *waE2E.Message)
 
 	mediaType := whatsmeow.GetMediaType(downloadableMsg)
 
-	if mediaType == whatsmeow.MediaImage {
+	switch mediaType {
+	case whatsmeow.MediaImage:
 		instance.ReplyImage(downloaded_bytes, messageutils.ReplyImageOptions{
 			Caption:  caption,
 			MimeType: mimeType,
 			Quoted:   true,
 		})
 		return
-	} else if mediaType == whatsmeow.MediaVideo {
+	case whatsmeow.MediaVideo:
 		instance.ReplyVideo(downloaded_bytes, messageutils.ReplyVideoOptions{
 			MimeType: mimeType,
 			Caption:  caption,
 			Quoted:   true,
 		})
 		return
-	} else if mediaType == whatsmeow.MediaAudio {
+	case whatsmeow.MediaAudio:
 		instance.ReplyAudio(downloaded_bytes, mimeType, true)
 		return
 	}

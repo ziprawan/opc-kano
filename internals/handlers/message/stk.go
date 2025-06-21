@@ -2,6 +2,7 @@ package message
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -107,7 +108,7 @@ func appendEXIF(src []byte, metadata StickerMetadata) []byte {
 }
 
 func stkImage(ctx *MessageContext, downloadableMessage whatsmeow.DownloadableMessage, metadata StickerMetadata) {
-	downloaded_bytes, err := ctx.Instance.Client.Download(downloadableMessage)
+	downloaded_bytes, err := ctx.Instance.Client.Download(context.Background(), downloadableMessage)
 	if err != nil {
 		ctx.Instance.Reply("Terjadi kesalahan saat mengunduh media", true)
 		return
@@ -166,7 +167,7 @@ func stkImage(ctx *MessageContext, downloadableMessage whatsmeow.DownloadableMes
 }
 
 func stkVideo(ctx *MessageContext, downloadableMsg whatsmeow.DownloadableMessage, metadata StickerMetadata) {
-	downloaded_bytes, err := ctx.Instance.Client.Download(downloadableMsg)
+	downloaded_bytes, err := ctx.Instance.Client.Download(context.Background(), downloadableMsg)
 	if err != nil {
 		ctx.Instance.Reply("Terjadi kesalahan saat mengunduh media!", true)
 		return

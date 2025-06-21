@@ -2,6 +2,7 @@ package message
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -20,7 +21,7 @@ func StkInfoHandler(ctx *MessageContext) {
 	msg := repliedMsg.Event.RawMessage
 
 	if stk := msg.StickerMessage; stk != nil {
-		downloaded_bytes, err := ctx.Instance.Client.Download(msg.GetStickerMessage())
+		downloaded_bytes, err := ctx.Instance.Client.Download(context.Background(), msg.GetStickerMessage())
 		if err != nil {
 			ctx.Instance.Reply(fmt.Sprintf("Terjadi kesalahan saat mengunduh media %s", err), true)
 			return
