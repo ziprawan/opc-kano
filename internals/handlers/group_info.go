@@ -6,11 +6,15 @@ import (
 	"fmt"
 	"kano/internals/database"
 	"kano/internals/utils/saveutils"
+	"slices"
+	"strings"
 
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/binary"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
+	"google.golang.org/protobuf/proto"
 )
 
 type JIDRole struct {
@@ -109,5 +113,69 @@ func GroupInfoHandler(client *whatsmeow.Client, event *events.GroupInfo) {
 			}
 		}
 		tx.Commit()
+	}
+
+	if len(event.UnknownChanges) > 0 {
+		for _, node := range event.UnknownChanges {
+			if node == nil {
+				continue
+			}
+
+			if node.Tag == "created_membership_requests" {
+				client.SendMessage(context.Background(), event.JID, &waE2E.Message{
+					ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+						Text: proto.String(fmt.Sprintf("Min, ada @%s mau join nih", event.Sender.User)),
+						ContextInfo: &waE2E.ContextInfo{
+							MentionedJID: []string{event.Sender.String()},
+						},
+					},
+				})
+			} else if node.Tag == "revoked_membership_requests" {
+				var revokedMembers []string
+				content, ok := node.Content.([]binary.Node)
+				if !ok {
+					continue
+				}
+				for _, revoked := range content {
+					jid, ok := revoked.Attrs["jid"].(types.JID)
+					fmt.Printf("Hai %T %+v\n", revoked.Attrs["jid"], revoked.Attrs["jid"])
+					if !ok {
+						continue
+					}
+
+					revokedMembers = append(revokedMembers, jid.String())
+				}
+
+				isCancelled := slices.Contains(revokedMembers, event.Sender.String())
+				mentions := revokedMembers
+				msg := ""
+
+				if isCancelled {
+					msg = "Yah, "
+					for _, revoked := range revokedMembers {
+						usr := strings.Split(revoked, "@")[0]
+						msg += "@" + usr + " "
+					}
+					msg += "gajadi join"
+				} else {
+					mentions = append(mentions, event.Sender.String())
+					msg = "Ups, permintaan join"
+					for _, revoked := range revokedMembers {
+						usr := strings.Split(revoked, "@")[0]
+						msg += "@" + usr + " "
+					}
+					msg += "ditolak oleh @" + event.Sender.User
+				}
+
+				client.SendMessage(context.Background(), event.JID, &waE2E.Message{
+					ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+						Text: &msg,
+						ContextInfo: &waE2E.ContextInfo{
+							MentionedJID: mentions,
+						},
+					},
+				})
+			}
+		}
 	}
 }
