@@ -270,6 +270,8 @@ func StkHandler(ctx *MessageContext) {
 			if dc.Message != nil && dc.Message.DocumentMessage != nil {
 				doc = dc.Message.DocumentMessage
 			}
+		} else if ptv := repliedMsg.Event.RawMessage.GetPtvMessage(); ptv != nil {
+			vid = ptv
 		}
 	}
 
