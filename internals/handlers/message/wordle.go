@@ -299,9 +299,9 @@ func determineWordlePoints(target string, settings *saveutils.ContactSettings) W
 			}
 
 			// Remove the index from the targetMaps
-			targetMaps[chr] = deleteIndex(targetMaps[chr], slices.Index(targetMaps[chr], runeIdx))
-			if len(targetMaps[chr]) == 0 {
-				delete(targetMaps, chr)
+			localTarget[chr] = deleteIndex(localTarget[chr], slices.Index(localTarget[chr], runeIdx))
+			if len(localTarget[chr]) == 0 {
+				delete(localTarget, chr)
 			}
 		}
 
@@ -313,14 +313,14 @@ func determineWordlePoints(target string, settings *saveutils.ContactSettings) W
 			}
 
 			chr := rune(guess[runeIdx])
-			if idxs, ok := targetMaps[chr]; ok && len(idxs) > 0 {
+			if idxs, ok := localTarget[chr]; ok && len(idxs) > 0 {
 				// It is yellow
 				point.Guess += 5 - runeIdx
 
 				// Remove 1 item
-				targetMaps[chr] = idxs[1:]
-				if len(targetMaps[chr]) == 0 {
-					delete(targetMaps, chr)
+				localTarget[chr] = idxs[1:]
+				if len(localTarget[chr]) == 0 {
+					delete(localTarget, chr)
 				}
 			}
 		}
