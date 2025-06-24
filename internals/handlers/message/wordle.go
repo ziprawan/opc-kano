@@ -3,12 +3,14 @@ package message
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/jpeg"
 	"kano/internals/database"
+	"kano/internals/utils/kanoutils"
 	"kano/internals/utils/messageutils"
 	"kano/internals/utils/saveutils"
 	"math/rand"
@@ -175,11 +177,58 @@ func randomSelectWordle() (*Wordle, error) {
 	return &wordle, nil
 }
 
+func countWordPoint(word string) int {
+	point := 0
+	pointMaps := map[rune]int{
+		'A': 1,
+		'B': 3,
+		'C': 3,
+		'D': 2,
+		'E': 1,
+		'F': 4,
+		'G': 2,
+		'H': 4,
+		'I': 1,
+		'J': 8,
+		'K': 5,
+		'L': 1,
+		'M': 3,
+		'N': 1,
+		'O': 1,
+		'P': 3,
+		'Q': 10,
+		'R': 1,
+		'S': 1,
+		'T': 1,
+		'U': 1,
+		'V': 4,
+		'W': 4,
+		'X': 8,
+		'Y': 4,
+		'Z': 10,
+	}
+
+	for _, rn := range word {
+		score := pointMaps[rn]
+		point += score
+	}
+	return point
+}
+
 func isWordExists(word string) bool {
 	var id int
 	db := database.GetDB()
 	err := db.QueryRow("SELECT id FROM wordle WHERE word = $1", strings.ToLower(word)).Scan(&id)
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			dict, _ := kanoutils.FindDefinition(word)
+			if dict != nil && len(dict.Results) != 0 {
+				db.Exec("INSERT INTO wordle VALUES (DEFAULT, $1, $2, 'en', 5, false)", strings.ToLower(word), countWordPoint(word))
+				return true
+			}
+		}
+
 		return false
 	} else {
 		return true
