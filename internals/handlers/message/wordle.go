@@ -157,7 +157,7 @@ func generateWordleImage(target string, guesses []string) ([]byte, error) {
 func randomSelectWordle() (*Wordle, error) {
 	db := database.GetDB()
 	var ids []int
-	rows, err := db.Query("SELECT id FROM wordle WHERE length = 5 AND lang = 'en'")
+	rows, err := db.Query("SELECT id FROM wordle WHERE length = 5 AND lang = 'en' AND is_wordle = true")
 	if err != nil {
 		return nil, fmt.Errorf("randomizer: Something went wrong when retrieving dictionary status: %s", err.Error())
 	}
