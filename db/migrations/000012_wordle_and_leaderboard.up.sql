@@ -1,0 +1,5 @@
+BEGIN;
+ALTER TABLE wordle ADD COLUMN "is_wordle" BOOL NOT NULL DEFAULT true;
+ALTER TABLE contact_settings ADD COLUMN "wordle_streaks" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE contact_settings ADD COLUMN "game_points" INTEGER NOT NULL DEFAULT 0;
+COMMIT;

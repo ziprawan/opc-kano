@@ -63,7 +63,9 @@ VALUES (
 	$2,
 	$3,
 	$4,
-	$5
+	$5,
+	$6,
+	$7
 )
 ON CONFLICT
 	("id")
@@ -71,7 +73,9 @@ DO UPDATE SET
 	confess_target_id = $2,
 	current_wordle = $3,
 	wordle_generated_at = $4,
-	wordle_guesses = $5`
+	wordle_guesses = $5,
+	wordle_streaks = $6,
+	game_points = $7`
 
 func getContactSettings(contactID int64) (*ContactSettings, error) {
 	db := database.GetDB()
@@ -265,6 +269,8 @@ func (c *Contact) SaveContactSettings() error {
 		cSettings.CurrentWordle,
 		cSettings.WordleGeneratedAt,
 		pq.Array(cSettings.WordleGuesses),
+		cSettings.WordleStreaks,
+		cSettings.GamePoints,
 	)
 	if err != nil {
 		return err

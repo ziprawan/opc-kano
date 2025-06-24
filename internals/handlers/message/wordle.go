@@ -36,6 +36,19 @@ type Wordle struct {
 	Points int
 }
 
+type WordlePoint struct {
+	// Point for the guesses
+	Guess int
+	// Point for the correct guessed word
+	Word int
+	// Bonus point if the guess was correct
+	Correct int
+	// Bonus point for wordle streaks
+	Streak int
+	// Total of all the points
+	Total int
+}
+
 func generateWordleImage(target string, guesses []string) ([]byte, error) {
 	fontBytes, err := os.ReadFile("assets/fonts/ComicRelief-Bold.ttf")
 	if err != nil {
@@ -235,6 +248,104 @@ func isWordExists(word string) bool {
 	}
 }
 
+func deleteIndex(slice []int, index int) []int {
+	if index < 0 || index >= len(slice) {
+		return slice // atau panic, tergantung kebutuhanmu
+	}
+	return append(slice[:index], slice[index+1:]...)
+}
+
+func determineWordlePoints(target string, settings *saveutils.ContactSettings) WordlePoint {
+	var point WordlePoint
+
+	if settings == nil {
+		return point
+	}
+	if len(settings.WordleGuesses) == 0 {
+		return point
+	}
+	// 0 for gray, 1 for yellow, 2 for green
+	wordState := make([]int, len(target))
+	targetMaps := map[rune][]int{}
+	for i, r := range target {
+		targetMaps[r] = append(targetMaps[r], i)
+	}
+
+	// Calculate for the guess point
+	for idx, guess := range settings.WordleGuesses {
+		localTarget := map[rune][]int{}
+		for k, v := range targetMaps {
+			copy(localTarget[k], v)
+		}
+
+		// First pass: Search for the green
+		for runeIdx := range guess {
+			chr := rune(guess[runeIdx])
+			// Ignore if the current idx at guess is not same as target
+			if chr != rune(target[runeIdx]) {
+				continue
+			}
+			// Check if previous guess already correct at this index
+			if wordState[runeIdx] == 2 {
+				continue
+			}
+
+			wordState[runeIdx] = 2
+			point.Guess += 2 * (5 - idx)
+			if idx == 5 {
+				// An exception for the last guess
+				// It has additional 1 point
+				point.Guess += 1
+			}
+
+			// Remove the index from the targetMaps
+			targetMaps[chr] = deleteIndex(targetMaps[chr], slices.Index(targetMaps[chr], runeIdx))
+			if len(targetMaps[chr]) == 0 {
+				delete(targetMaps, chr)
+			}
+		}
+
+		// Second pass: Do for the yellow and gray parts
+		for runeIdx := range guess {
+			// Already green, skip
+			if wordState[runeIdx] == 2 {
+				continue
+			}
+
+			chr := rune(guess[runeIdx])
+			if idxs, ok := targetMaps[chr]; ok && len(idxs) > 0 {
+				// It is yellow
+				point.Guess += 5 - runeIdx
+
+				// Remove 1 item
+				targetMaps[chr] = idxs[1:]
+				if len(targetMaps[chr]) == 0 {
+					delete(targetMaps, chr)
+				}
+			}
+		}
+	}
+
+	// Check for the last guess
+	// I think it is guaranteed that guesses atleast has 1 string
+	foundIdx := slices.Index(settings.WordleGuesses, target)
+	if foundIdx != -1 {
+		// We will add for the word point too for the correct answer :D
+		point.Correct = 10 * (5 - foundIdx)
+		point.Word = countWordPoint(target)
+	}
+
+	// Streaks point
+	// Streaks point only will be calculated if the streaks is more than 2
+	if settings.WordleStreaks > 2 {
+		point.Streak = 5 * settings.WordleStreaks
+	}
+
+	point.Total = point.Correct + point.Guess + point.Streak + point.Word
+
+	return point
+}
+
 func wordleMainLogic(guess, target string, guesses []string, settings *saveutils.ContactSettings) (imgBytes []byte, caption string, err error) {
 	guessesCount := len(guesses)
 	guessAlreadyCorrect := guessesCount > 0 && guesses[guessesCount-1] == target
@@ -278,17 +389,30 @@ func wordleMainLogic(guess, target string, guesses []string, settings *saveutils
 	settings.WordleGuesses = guesses
 	imgBytes, err = generateWordleImage(target, guesses)
 	if guess == target {
-		if guessesCount == 1 {
+		switch guessesCount {
+		case 1:
 			caption = "Weh keren, sekali nebak doang euy"
-		} else if guessesCount == 6 {
+		case 6:
 			caption = "Mantap, pas pasan banget"
-		} else {
+		default:
 			caption = "Sip, tebakanmu udah bener!"
 		}
+
+		settings.WordleStreaks++
+		point := determineWordlePoints(target, settings)
+
+		caption += fmt.Sprintf("\n\n*===== Point stats =====*\nPoint kata: %d\nPoin nebak: %d\nPoin bonus benar: %d\nPoin streak: %d\n*=======================*\nPoin total: %d", point.Word, point.Guess, point.Correct, point.Streak, point.Total)
+		settings.GamePoints += point.Total
+
 		return
 	} else {
 		if guessesCount == 6 {
 			caption = fmt.Sprintf("Yah, kesempatanmu udah habis :(\nJawabannya: %s", target)
+
+			point := determineWordlePoints(target, settings)
+			caption += fmt.Sprintf("\n\n*===== Point stats =====*\nPoint kata: %d\nPoin nebak: %d\nPoin bonus benar: %d\nPoin streak: %d\n*=======================*\nPoin total: %d", point.Word, point.Guess, point.Correct, point.Streak, point.Total)
+
+			settings.GamePoints += point.Total
 		} else {
 			caption = fmt.Sprintf("Tebakanmu masih salah nih, baru tebakan ke %d dari 6 kali", guessesCount)
 		}

@@ -51,6 +51,8 @@ type ContactSettings struct {
 	CurrentWordle     sql.NullString
 	WordleGeneratedAt sql.NullTime
 	WordleGuesses     []string
+	WordleStreaks     int
+	GamePoints        int
 }
 
 type Contact struct {
