@@ -277,3 +277,15 @@ func (c *Contact) SaveContactSettings() error {
 	}
 	return nil
 }
+
+func (c *Contact) BuildContactSettings() {
+	if c == nil {
+		return
+	}
+	c.Settings = &ContactSettings{}
+}
+
+func (c *Contact) Save() error {
+	_, err := SaveOrUpdateContact(c)
+	return err
+}
