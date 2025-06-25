@@ -275,7 +275,7 @@ func determineWordlePoints(target string, settings *saveutils.ContactSettings) W
 	for idx, guess := range settings.WordleGuesses {
 		localTarget := map[rune][]int{}
 		for k, v := range targetMaps {
-			copy(localTarget[k], v)
+			localTarget[k] = append([]int(nil), v...) // safe deep copy
 		}
 
 		// First pass: Search for the green
@@ -307,15 +307,16 @@ func determineWordlePoints(target string, settings *saveutils.ContactSettings) W
 
 		// Second pass: Do for the yellow and gray parts
 		for runeIdx := range guess {
-			// Already green, skip
-			if wordState[runeIdx] == 2 {
+			// Already green or yellow, skip
+			if wordState[runeIdx] != 0 {
 				continue
 			}
 
 			chr := rune(guess[runeIdx])
 			if idxs, ok := localTarget[chr]; ok && len(idxs) > 0 {
 				// It is yellow
-				point.Guess += 5 - runeIdx
+				point.Guess += 5 - idx
+				wordState[runeIdx] = 1 // Set this state to yellow
 
 				// Remove 1 item
 				localTarget[chr] = idxs[1:]
