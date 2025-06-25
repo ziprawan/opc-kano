@@ -62,13 +62,21 @@ var MESSAGE_HANDLERS MessageHandlerFuncMap = MessageHandlerFuncMap{
 	"json": MessageHandler{
 		Func: JSONHandler,
 	},
+	"oxford": MessageHandler{
+		Func: OxfordHandler,
+	},
+	"leaderboard": MessageHandler{
+		Func:    LeaderboardHandler,
+		Aliases: []string{"lb"},
+	},
+	"setname": MessageHandler{
+		Func:    SetNameHandler,
+		Aliases: []string{"name"},
+	},
 	"test": MessageHandler{
 		Func: func(ctx *MessageContext) {
 			ctx.Instance.Client.SendMessage(context.Background(), *ctx.Instance.ChatJID(), ctx.Instance.Client.BuildReaction(*ctx.Instance.ChatJID(), *ctx.Instance.SenderJID(), *ctx.Instance.ID(), "😂"))
 		},
-	},
-	"oxford": MessageHandler{
-		Func: OxfordHandler,
 	},
 }
 var funcs map[string]MessageHandlerFunc = map[string]MessageHandlerFunc{}
