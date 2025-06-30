@@ -81,11 +81,13 @@ func getContactSettings(contactID int64) (*ContactSettings, error) {
 	db := database.GetDB()
 	var contactSettings ContactSettings
 	var wordleGuessesRaw sql.NullString
-	err := db.QueryRow("SELECT confess_target_id, current_wordle, wordle_generated_at, to_json(wordle_guesses) FROM contact_settings WHERE id = $1", contactID).Scan(
+	err := db.QueryRow("SELECT confess_target_id, current_wordle, wordle_generated_at, to_json(wordle_guesses), wordle_streaks, game_points FROM contact_settings WHERE id = $1", contactID).Scan(
 		&contactSettings.ConfessTargetID,
 		&contactSettings.CurrentWordle,
 		&contactSettings.WordleGeneratedAt,
 		&wordleGuessesRaw,
+		&contactSettings.WordleStreaks,
+		&contactSettings.GamePoints,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
