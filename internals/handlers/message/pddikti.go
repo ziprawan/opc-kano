@@ -1,61 +1,123 @@
 package message
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"io"
 	projectconfig "kano/internals/project_config"
 	"kano/internals/utils/kanoutils"
-	"net/http"
 	"net/url"
 	"slices"
 	"strings"
+	"time"
 )
 
-var wle = []string{"ian", "pdd", "ps:", "htt", "emd", "int", "ikt", "car", "/en", "pi-", "pen", "ll/", "ek.", "i.k", "//a", "c/a", "isa", "id/", "ikt", "go."}
+func generateDetail(id, category string) string {
+	str := ""
+	layout := "2006-01-02T15:04:05Z"
+	dateFormat := "Monday, 02 January 2006"
 
-type PDDiktiMahasiswa struct {
-	ID          string `json:"id"`
-	Nama        string `json:"nama"`
-	NIM         string `json:"nim"`
-	NamaPT      string `json:"nama_pt"`
-	SingkatanPT string `json:"sinkatan_pt"`
-	NamaProdi   string `json:"nama_prodi"`
-}
+	switch category {
+	case "dosen":
+		detail, err := kanoutils.GetPNSDetails(id)
+		if err != nil {
+			return err.Error()
+		}
 
-type PDDiktiDosen struct {
-	ID          string `json:"id"`
-	Nama        string `json:"nama"`
-	NIDN        string `json:"nidn"`
-	NUPTK       string `json:"nuptk"`
-	NamaPT      string `json:"nama_pt"`
-	SingkatanPT string `json:"sinkatan_pt"`
-	NamaProdi   string `json:"nama_prodi"`
-}
+		profile := detail.Profile
 
-type PDDiktiPT struct {
-	ID          string `json:"id"`
-	Kode        string `json:"kode"`
-	NamaSingkat string `json:"nama_singkat"`
-	Nama        string `json:"nama"`
-}
+		str = "*Detail Dosen*\n\n"
 
-type PDDiktiProdi struct {
-	ID        string `json:"id"`
-	Nama      string `json:"nama"`
-	Jenjang   string `json:"jenjang"`
-	PT        string `json:"pt"`
-	PTSingkat string `json:"pt_singkat"`
-}
+		// Profile
+		str += fmt.Sprintf("Nama: %s (%s)\nPendidikan Terakhir: %s\n", profile.NamaDosen, profile.JenisKelamin, profile.PendidikanTertinggi)
+		str += fmt.Sprintf("PT - Prodi: %s - %s\n", profile.NamaPT, profile.NamaProdi)
+		str += fmt.Sprintf("Jabatan: %s\n", profile.JabatanAkademik)
+		str += fmt.Sprintf("Status Ikatan Kerja: %s (%s)\n", profile.StatusIkatanKerja, profile.StatusAktivitas)
 
-type PDDiktiResult struct {
-	Mahasiswa []PDDiktiMahasiswa `json:"mahasiswa"`
-	Dosen     []PDDiktiDosen     `json:"dosen"`
-	PT        []PDDiktiPT        `json:"pt"`
-	Prodi     []PDDiktiProdi     `json:"prodi"`
+		// Study Histories
+		str += "\n*Riwayat Pendidikan Dosen*\n\n"
+		for idx, study := range detail.StudyHistories {
+			year := fmt.Sprintf("%d", study.TahunLulus)
+			if study.TahunMasuk != 0 {
+				year = fmt.Sprintf("%d - %d", study.TahunMasuk, study.TahunLulus)
+			}
+
+			str += fmt.Sprintf("%d. %s %s (%s - %s) di %s (%s)\n", idx+1, study.Jenjang, study.NamaProdi, study.GelarAkademik, study.SingkatanGelar, study.NamaPT, year)
+		}
+
+		// Teaching Histories
+		str += "\n*Riwayat Mengajar Dosen*\n\n"
+		for semester, teachings := range detail.TeachingHistories {
+			str += fmt.Sprintf("%s\n", semester)
+
+			for idx, t := range teachings {
+				str += fmt.Sprintf("%d. %s (%s ~ %s) di %s\n", idx+1, t.NamaMatkul, t.KodeMatkul, t.NamaKelas, t.NamaPT)
+			}
+		}
+
+		// Portfolios
+		str += "\n*Portofolio*\n\n"
+
+		str += "Penelitian\n"
+		for idx, data := range detail.Researches {
+			str += fmt.Sprintf("%d. %s (%d)\n", idx+1, data.JudulKegiatan, data.TahunKegiatan)
+		}
+		if len(detail.Researches) == 0 {
+			str += "Tidak ada.\n"
+		}
+
+		str += "Pengabdian Masyarakat\n"
+		for idx, data := range detail.Devotionals {
+			str += fmt.Sprintf("%d. %s (%d)\n", idx+1, data.JudulKegiatan, data.TahunKegiatan)
+		}
+		if len(detail.Devotionals) == 0 {
+			str += "Tidak ada.\n"
+		}
+
+		str += "Karya\n"
+		for idx, data := range detail.Creations {
+			str += fmt.Sprintf("%d. [%s] %s (%d)\n", idx+1, data.JenisKegiatan, data.JudulKegiatan, data.TahunKegiatan)
+		}
+		if len(detail.Creations) == 0 {
+			str += "Tidak ada.\n"
+		}
+
+		str += "HKI/Paten\n"
+		for idx, data := range detail.Patents {
+			str += fmt.Sprintf("%d. %s (%d)\n", idx+1, data.JudulKegiatan, data.TahunKegiatan)
+		}
+		if len(detail.Patents) == 0 {
+			str += "Tidak ada.\n"
+		}
+	case "mhs":
+		mhs, err := kanoutils.GetMHSDetails(id)
+		if err != nil {
+			return err.Error()
+		}
+
+		enterDate, err := time.Parse(layout, mhs.TanggalMasuk)
+		if err != nil {
+			return err.Error()
+		}
+		enterDateFormatted := enterDate.Format(dateFormat)
+
+		gender := "Tidak diketahui"
+		switch mhs.JenisKelamin {
+		case "L":
+			gender = "Laki-laki"
+		case "P":
+			gender = "Perempuan"
+		default:
+			gender += fmt.Sprintf("(%s)", mhs.JenisKelamin)
+		}
+
+		str = "*Detail Mahasiswa*\n\n"
+		str += fmt.Sprintf("- Nama: %s\n- Jenis Kelamin: %s\n- NIM: %s\n", mhs.Nama, gender, mhs.NIM)
+		str += fmt.Sprintf("- Perguruan Tinggi: %s\n- Tanggal Masuk: %s\n- Jenjang - Program Studi: %s - %s\n", mhs.NamaPT, enterDateFormatted, mhs.Jenjang, mhs.Prodi)
+		str += fmt.Sprintf("- Status Awal Mahasiswa: %s\n- Status Terakhir Mahasiswa: %s", mhs.JenisDaftar, mhs.StatusSaatIni)
+	case "pt":
+	case "prodi":
+	}
+
+	return strings.TrimSpace(str)
 }
 
 func PDDIKTIHandler(ctx *MessageContext) {
@@ -65,6 +127,7 @@ func PDDIKTIHandler(ctx *MessageContext) {
 		return
 	}
 
+	MAX_RESULT := 24
 	allowedQueryTypes := []string{"dosen", "mahasiswa", "pt", "prodi", "mhs", "all"}
 	fullCmd := ctx.Parser.GetCommand().FullCommand
 	args := ctx.Parser.GetArgs()
@@ -94,107 +157,38 @@ func PDDIKTIHandler(ctx *MessageContext) {
 		}
 	}
 
+	div := 0
+	for i := range enabledTypes {
+		if enabledTypes[i] {
+			div++
+		}
+	}
+	if div == 0 {
+		return
+	}
+	MAX_RESULT /= div
+
 	textRunes := []rune(ctx.Parser.Text)
 	queryString := url.QueryEscape(string(textRunes[args[1].Start:]))
-	url := fmt.Sprintf(
-		"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
-		wle[3],
-		wle[2],
-		wle[14],
-		wle[9],
-		wle[1],
-		wle[6],
-		wle[13],
-		wle[4],
-		wle[6],
-		wle[16],
-		wle[5],
-		wle[12],
-		wle[19],
-		wle[17],
-		wle[10],
-		wle[7],
-		wle[0],
-		wle[8],
-		wle[15],
-		wle[11],
-		queryString,
-	)
-
-	req, err := http.NewRequest("GET", url, nil)
+	result, err := kanoutils.SearchDiddy(queryString, conf.PDDiktiKey.String, conf.PDDiktiIV.String)
 	if err != nil {
-		ctx.Instance.Reply(err.Error(), true)
-		return
-	}
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		ctx.Instance.Reply(err.Error(), true)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		ctx.Instance.Reply(fmt.Sprintf("Expected HTTP code 200, got %s", resp.Status), true)
-		return
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		ctx.Instance.Reply(err.Error(), true)
-		return
-	}
-	cipherText, err := base64.StdEncoding.DecodeString(string(body[1 : len(body)-2]))
-	if err != nil {
-		ctx.Instance.Reply(fmt.Sprintf("Something went wrong when decoding PDDikti's response\nErr: %s", err), true)
-		return
-	}
-	key, err := base64.StdEncoding.DecodeString(conf.PDDiktiKey.String)
-	if err != nil {
-		ctx.Instance.Reply(fmt.Sprintf("Something went wrong when decoding PDDikti's key\nErr: %s", err), true)
-		return
-	}
-	iv, err := base64.StdEncoding.DecodeString(conf.PDDiktiIV.String)
-	if err != nil {
-		ctx.Instance.Reply(fmt.Sprintf("Something went wrong when decoding PDDikti's iv\nErr: %s", err), true)
-		return
-	}
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		ctx.Instance.Reply(fmt.Sprintf("Something went wrong when initializing new cipher\nErr: %s", err), true)
-		return
-	}
-	if len(cipherText)%aes.BlockSize != 0 {
-		ctx.Instance.Reply("CipherText is not a multiple of block size (Maybe encryption or key was changed?)", true)
-		return
-	}
-	mode := cipher.NewCBCDecrypter(block, iv)
-	decrypted := make([]byte, len(cipherText))
-	mode.CryptBlocks(decrypted, cipherText)
-	decrypted, err = kanoutils.Pkcs7Unpad(decrypted, aes.BlockSize)
-	if err != nil {
-		ctx.Instance.Reply(fmt.Sprintf("Something went wrong when unpadding pkcs7\nErr: %s", err), true)
-		return
-	}
-
-	var result PDDiktiResult
-	err = json.Unmarshal(decrypted, &result)
-	if err != nil {
-		ctx.Instance.Reply(fmt.Sprintf("Something went wrong when parsing decrypted result (maybe the structure was changed?)\nErr: %s", err), true)
+		ctx.Instance.Reply(fmt.Sprintf("Terjadi kesalahan: %s", err), true)
 		return
 	}
 
 	// Create msg
 	msgs := []string{}
+	cp := map[string]string{} // Value must be one of "dosen", "mhs", "pt", or "prodi"
 
 	if len(result.Dosen) > 0 && enabledTypes[0] {
 		adds := "*List Dosen*\n==========\n\n"
 		dosens := []string{}
 
 		for idx, dosen := range result.Dosen {
-			if idx >= 3 {
+			if idx >= MAX_RESULT {
 				break
 			}
+			cp[dosen.ID] = "dosen"
 			dosenAdds := fmt.Sprintf("Nama: %s\n", dosen.Nama)
 			dosenAdds += fmt.Sprintf("Nomor Induk Dosen Nasional: %s\n", dosen.NIDN)
 			if dosen.NUPTK != "" {
@@ -217,9 +211,12 @@ func PDDIKTIHandler(ctx *MessageContext) {
 		mhss := []string{}
 
 		for idx, mhs := range result.Mahasiswa {
-			if idx >= 3 {
+			if idx >= MAX_RESULT {
 				break
 			}
+
+			cp[mhs.ID] = "mhs"
+
 			mhsAdds := fmt.Sprintf("Nama: %s\n", mhs.Nama)
 			mhsAdds += fmt.Sprintf("Nomor Induk Mahasiswa: %s\n", mhs.NIM)
 			mhsAdds += fmt.Sprintf("Perguruan Tinggi: %s", mhs.NamaPT)
@@ -239,9 +236,12 @@ func PDDIKTIHandler(ctx *MessageContext) {
 		pts := []string{}
 
 		for idx, pt := range result.PT {
-			if idx >= 3 {
+			if idx >= MAX_RESULT {
 				break
 			}
+
+			cp[pt.ID] = "pt"
+
 			ptAdds := fmt.Sprintf("Nama: %s", pt.Nama)
 			if pt.NamaSingkat != "" {
 				ptAdds += fmt.Sprintf(" (%s)", pt.NamaSingkat)
@@ -259,9 +259,12 @@ func PDDIKTIHandler(ctx *MessageContext) {
 		prodis := []string{}
 
 		for idx, prodi := range result.Prodi {
-			if idx >= 3 {
+			if idx >= MAX_RESULT {
 				break
 			}
+
+			cp[prodi.ID] = "prodi"
+
 			mhsAdds := fmt.Sprintf("Nama: %s - %s\nPerguruan Tinggi: %s", prodi.Jenjang, prodi.Nama, prodi.PT)
 			if prodi.PTSingkat != "" {
 				mhsAdds += fmt.Sprintf(" (%s)", prodi.PTSingkat)
@@ -272,6 +275,20 @@ func PDDIKTIHandler(ctx *MessageContext) {
 
 		adds += strings.Join(prodis, "\n----------\n")
 		msgs = append(msgs, adds)
+	}
+
+	fmt.Println("CP LENGTH:", len(cp))
+
+	if len(cp) == 1 {
+		str := ""
+		for k, v := range cp {
+			str += generateDetail(k, v)
+		}
+
+		if len(str) != 0 {
+			ctx.Instance.Reply(str, true)
+			return
+		}
 	}
 
 	if len(msgs) == 0 {
