@@ -259,7 +259,7 @@ func ConfessTargetHandler(ctx *MessageContext) {
 
 	db := database.GetDB()
 	var name string
-	err = db.QueryRow("SELECT g.name FROM participant p INNER JOIN \"group\" g ON p.group_id = $1 AND p.role != 'LEFT' AND p.contact_id = $2", id, ctx.Instance.Contact.ID).Scan(&name)
+	err = db.QueryRow("SELECT g.name FROM participant p INNER JOIN \"group\" g ON p.group_id = g.id AND p.role != 'LEFT' AND p.contact_id = $2 WHERE p.group_id = $1", id, ctx.Instance.Contact.ID).Scan(&name)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.Instance.Reply("Grup tidak ditemukan", true)
