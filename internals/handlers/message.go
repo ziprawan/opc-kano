@@ -40,7 +40,7 @@ func MessageEventHandler(client *whatsmeow.Client, event *events.Message) error 
 	}
 
 	handlerCtx.Handle()
-	if cmd.Command == "help" {
+	if cmd.Command == "help" || cmd.Command == "man" {
 		handlerCtx.HelpHandler()
 	}
 

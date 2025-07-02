@@ -13,6 +13,19 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
+var LoginMan = CommandMan{
+	Name:     "login - Masuk pengguna untuk platform website",
+	Synopsis: []string{"login"},
+	Description: []string{
+		"Login/masuk ke platform website untuk bot ini. Bot akan memberikan link yang mengarahkan pengguna ke platform website bot dan akan langsung terautentikasi sebagai nomor pengguna.",
+		"Platform website hanya memiliki fitur untuk mengatur dan mengambil title dalam grup.",
+		"Tidak ada argumen yang diperlukan untuk perintah ini.",
+	},
+
+	SeeAlso: []SeeAlso{},
+	Source:  "login.go",
+}
+
 func RandomHexString(length int) (string, error) {
 	byteLen := (length + 1) / 2 // 2 hex chars per byte
 	bytes := make([]byte, byteLen)

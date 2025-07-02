@@ -5,6 +5,18 @@ import (
 	"time"
 )
 
+var PingMan = CommandMan{
+	Name:     "ping - cek latensi",
+	Synopsis: []string{"ping"},
+	Description: []string{
+		"Cek latensi respon bot dalam milidetik ~ Biasa digunakan untuk mengecek apakah bot aktif atau tidak.",
+		"Hasil latensi sangat tidak akurat karena mengandalkan waktu dari pesan yang dikirim. Sedangkan waktu yang ada di dalam pesan itu dalam detik, sehingga memiliki ketidakpastian sebesar 1 detik.",
+		"Tidak ada argumen yang diperlukan untuk perintah ini.",
+	},
+	SeeAlso: []SeeAlso{},
+	Source:  "ping.go",
+}
+
 func PingHandler(ctx *MessageContext) {
 	msgTime := ctx.Instance.Event.Info.Timestamp.UnixMilli()
 	currTime := time.Now().UnixMilli()

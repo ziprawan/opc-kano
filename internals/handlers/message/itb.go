@@ -11,6 +11,21 @@ import (
 	"time"
 )
 
+var NimMan = CommandMan{
+	Name:     "nim - Cari mahasiswa ITB",
+	Synopsis: []string{"nim NIM_OR_NAME ...", "nim NIM_OR_NAME ... [PAGE_NUMBER]"},
+	Description: []string{
+		"Menampilkan daftar informasi sederhana mahasiswa ITB yang ditemukan berdasarkan pencarian NIM atau nama mahasiswa. Daftar hasil yang ditemukan akan diurutkan berdasarkan angka NIM nya.",
+		"*NIM_OR_NAME* (Wajib)\n{SPACE}NIM atau nama mahasiswa yang ingin dicari. ",
+		"*PAGE_NUMBER*\n{SPACE}Nomor halaman daftar mahasiswa yang ditemukan. Argumen ini hanya dianggap ada ketika argumen NIM_OR_NAME terpenuhi dan argumen paling akhir berupa bilangan bulat selain nol. Gunakan bilangan negatif untuk mengurutkan hasil dari belakang.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "pddikti", Type: SeeAlsoTypeCommand},
+	},
+	Source: "itb.go",
+}
+
 const QUERY_NIM_MAHASISWA = `SELECT
 	"s"."name" AS "nama",
 	"s"."nim" AS "NIM",

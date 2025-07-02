@@ -24,6 +24,52 @@ import (
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
+var StkMan = CommandMan{
+	Name: "stk - Buat stiker",
+	Synopsis: []string{
+		"stk [PACK_NAME]",
+		"stk [PACK_NAME] [PUBLISHER_NAME]",
+		"stk [PACK_NAME] [PUBLISHER_NAME] [EMOJI]",
+		"stk [PACK_NAME] [PUBLISHER_NAME] [EMOJI] [ANDROID_STORE_LINK [IOS_STORE_LINK]]",
+	},
+	Description: []string{
+		"Buat stiker dari gambar atau video yang dikirim atau pengirim bisa me-_reply_ gambar atau video yang sudah ada selama media tersebut masih bisa diunduh.",
+		"Bot akan memasukkan beberapa metadata yang diperlukan seperti id stiker, nama pack dan publisher stiker, dan sebagainya. Sisanya seperti emoji dan link app store untuk android dan ios.",
+		"Secara bawaan, nama pack konstan berisi \"Kano Bot\". Untuk nama publisher, pertama bot akan mengecek terlebih dahulu _custom_name_ yang pernah diatur oleh pengirim menggunakan setname. Jika tidak ada, maka akan menggunakan nama WhatsApp dari sang pengirim, namun untuk kasus yang sangat jarang terjadi jika tidak ada juga maka akan berisi \"Kano\".",
+		"Sesuai dengan spesifikasi yang sudah diberikan oleh WhatsApp (lihat bagian SEE ALSO nomor 2), stiker yang dibuat memiliki format WebP, memiliki resolusi tepat 512x512 piksel dan untuk stiker beranimasi harus lebih dari 8 milidetik dan lebih kecil atau sama dengan 10 detik. Namun, untuk kedua-duanya (stiker statis dan beranimasi) bot akan memperbolehkan ukurannya hingga 1 MB.",
+
+		// Arguments section
+		"*PACK_NAME*\n{SPACE}Nama pack untuk sebuah stiker. Biasanya terlihat di bawah gambar stiker setelah pengguna mengklik stiker tersebut dan biasanya ditandai dengan huruf tebal.",
+		"*PUBLISHER_NAME*\n{SPACE}Nama publisher untuk sebuah stiker. Biasanya terlihat di bawah gambar stiker setelah pengguna mengklik stiker tersebut dan biasanya berada di samping nama pack.",
+		"*EMOJI*\n{SPACE}Emoji untuk sebuah stiker. Tidak begitu berefek untuk sebuah stiker (bahkan untuk notifikasi :-[), tapi berguna untuk klasifikasi stiker berdasarkan emoji. (lihat bagian SEE ALSO nomor 3).",
+		"*ANDROID_STORE_LINK*\n{SPACE}Link app store android untuk sebuah stiker. Saat pengguna mengklik stiker tersebut, pengguna khususnya android akan melihat menu \"View sticker pack\" atau sejenisnya dan akan mengarahkan mereka ke link yang sudah diatur untuk stiker tersebut. Memasukkan teks biasa atau link selain app store/play store ke argumen ini mungkin bisa, namun tombol menu tersebut mungkin saja tidak akan muncul di sisi pengguna.",
+		"*IOS_STORE_LINK*\n{SPACE}(Argumen ini bersifat wajib jika argumen ANDROID_STORE_LINK berisi) Link app store ios untuk sebuah stiker. Saat pengguna mengklik stiker tersebut, pengguna khususnya ios akan melihat menu \"View sticker pack\" atau sejenisnya dan akan mengarahkan mereka ke link yang sudah diatur untuk stiker tersebut. Memasukkan teks biasa atau link selain app store/play store ke argumen ini mungkin bisa, namun tombol menu tersebut mungkin saja tidak akan muncul di sisi pengguna.",
+
+		// Closing
+		"Semua argumen bersifat opsional. _Tip: Semenjak bot ini mendukung petik dua untuk memaksa 2 kata atau lebih menjadi satu argumen, maka pengguna bisa menggunakan \"dua kata\" dengan tanda petik untuk setiap argumennya (kecuali EMOJI) atau hanya tanda petik dua (\"\") untuk mengosongkan argumen._",
+	},
+
+	SeeAlso: []SeeAlso{
+		{
+			Content: "setname",
+			Type:    SeeAlsoTypeCommand,
+		},
+		{
+			Content: "https://github.com/WhatsApp/stickers/blob/main/Android/README.md#sticker-art-and-app-requirements",
+			Type:    SeeAlsoTypeExternalLink,
+		},
+		{
+			Content: "https://github.com/WhatsApp/stickers/wiki/Tag-your-stickers-with-Emojis",
+			Type:    SeeAlsoTypeExternalLink,
+		},
+		{
+			Content: "stkinfo",
+			Type:    SeeAlsoTypeCommand,
+		},
+	},
+	Source: "stk.go",
+}
+
 type StickerMetadata struct {
 	StickerPackID        *string  `json:"sticker-pack-id,omitempty"`
 	StickerPackName      *string  `json:"sticker-pack-name,omitempty"`

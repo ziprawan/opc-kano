@@ -6,6 +6,20 @@ import (
 	"strings"
 )
 
+var OxfordMan = CommandMan{
+	Name:     "oxford - Definisi kata (english) dari kamus Oxford",
+	Synopsis: []string{".oxford KATA ..."},
+	Description: []string{
+		"Mencari definisi dari sebuah atau lebih kata dari kamus Oxford (SEE ALSO nomor 1). Hasil yang akan dikirim ada infleksinya, bagaimana cara mengucapkannya (disertai link audio), definisi (serta definisi singkatnya), dan catatan dari sang penerjemah.",
+		"*KATA* (Wajib)\n{SPACE}Kata atau dua lebih kata yang ingin dicari.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "https://dict-api.com/api/od/", Type: SeeAlsoTypeExternalLink},
+	},
+	Source: "oxford.go",
+}
+
 func OxfordHandler(ctx *MessageContext) {
 	args := ctx.Parser.GetArgs()
 	if len(args) == 0 {

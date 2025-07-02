@@ -10,7 +10,24 @@ import (
 	"time"
 )
 
-func generateDetail(id, category string) string {
+var DiddyMan = CommandMan{
+	Name:     "pddikti - Cari data dari PDDikti",
+	Synopsis: []string{"pddikti TIPE KUERI ..."},
+	Description: []string{
+		"Mencari data dosen, mahasiswa, perguruan tinggi, atau program studi dari PDDikti (Pangkalan Data Pendidikan Tinggi).",
+		"\nBot akan mencari dari web PDDikti (SEE ALSO nomor 2) dan jika hasil yang ditemukan lebih dari satu, maka bot akan mengambil maksimal 24 data teratas. Sebaliknya, jika hasil yang ditemukan hanya satu, bot akan mengambil detail dari data tersebut.",
+		"*TIPE* (Wajib)\n{SPACE}Tipe pencarian. Untuk saat ini menerima \"dosen\", \"mahasiswa\" atau \"mhs\", \"pt\", \"ptn\". Untuk mengambil dosen dan mahasiswa bisa digunakan kedua-duanya dengan memisahkan antar tipe dengan koma (contoh: dosen,mhs), atau jika ingin semua tipe, gunakan \"all\"",
+		"*KUERI* (Wajib)\n{SPACE}Nama atau yang bersangkutan yang ingin dicari. Semakin spesifik kueri, maka akan semakin sedikit hasil yang dikembalikan sehingga bisa mendapat detail yang lebih lengkap.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "nim", Type: SeeAlsoTypeCommand},
+		{Content: "https://pddikti.kemdiktisaintek.go.id/", Type: SeeAlsoTypeExternalLink},
+	},
+	Source: "pddikti.go",
+}
+
+func generateDetail(id, category string) (string, bool) {
 	str := ""
 	layout := "2006-01-02T15:04:05Z"
 	dateFormat := "Monday, 02 January 2006"
@@ -19,7 +36,7 @@ func generateDetail(id, category string) string {
 	case "dosen":
 		detail, err := kanoutils.GetPNSDetails(id)
 		if err != nil {
-			return err.Error()
+			return err.Error(), false
 		}
 
 		profile := detail.Profile
@@ -90,12 +107,12 @@ func generateDetail(id, category string) string {
 	case "mhs":
 		mhs, err := kanoutils.GetMHSDetails(id)
 		if err != nil {
-			return err.Error()
+			return err.Error(), false
 		}
 
 		enterDate, err := time.Parse(layout, mhs.TanggalMasuk)
 		if err != nil {
-			return err.Error()
+			return err.Error(), false
 		}
 		enterDateFormatted := enterDate.Format(dateFormat)
 
@@ -117,7 +134,7 @@ func generateDetail(id, category string) string {
 	case "prodi":
 	}
 
-	return strings.TrimSpace(str)
+	return strings.TrimSpace(str), true
 }
 
 func PDDIKTIHandler(ctx *MessageContext) {
@@ -282,7 +299,10 @@ func PDDIKTIHandler(ctx *MessageContext) {
 	if len(cp) == 1 {
 		str := ""
 		for k, v := range cp {
-			str += generateDetail(k, v)
+			res, ok := generateDetail(k, v)
+			if ok {
+				str += res
+			}
 		}
 
 		if len(str) != 0 {

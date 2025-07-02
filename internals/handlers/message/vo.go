@@ -14,6 +14,32 @@ import (
 	"go.mau.fi/whatsmeow/proto/waE2E"
 )
 
+var VoMan = CommandMan{
+	Name:     "vo - bukan pesan view once / sekali lihat",
+	Synopsis: []string{"vo"},
+	Description: []string{
+		"_*PERINGATAN: Semenjak perintah ini mungkin melanggar kebijakan privasi yang dibuat oleh WhatsApp, mohon gunakan dengan bijak.*_",
+
+		"Membuka media dari pesan view once atau sekali lihat dan mengirim media dari pesan sekali lihat tersebut beserta dengan _caption_-nya.",
+		"Perintah ini mengharuskan penggunanya untuk me-reply pesan yang memiliki tipe view once atau sekali lihat, selain itu bot tidak akan menerima perintah ini.",
+		"Jika benar, bot akan mengecek terlebih dahulu siapa pengirim pesan sekali lihat tersebut. Jika pengirim pesan sekali lihat adalah pengirim perintah ini, maka bot akan langsung membuka dan mengirim media pesan sekali lihat tersebut. Jika bukan, maka bot akan mengirim pesan teks permintaan dan menunggu sang pengirim pesan sekali lihat untuk memilih antara menerimanya atau tidak.",
+
+		"*Menerima atau menolak permintaan*\n{SPACE}Untuk menerima permintaan, pengirim pesan sekali lihat cukup me-react pesan permintaan dengan emoji centang hijau ✅ dan untuk menolak menggunakan emoji silang merah ❌.",
+		"Pesan sekali lihat yang sudah pernah diminta sebelumnya tidak akan bisa diminta kembali MESKIPUN pesan permintaannya terhapus (oleh admin atau dari sisi pengguna). Hal ini juga berlaku untuk pesan yang sudah diterima dan ditolak.",
+
+		"Sesuai dengan tertera di dalam artikel FAQ WhatsApp mengenai pesan sekali lihat, bot mungkin hanya akan berhasil mengirim media pesan sekali lihat tersebut jika jarak antara permintaan diterima dengan pesan dikirim masih kurang dari 14 hari atau sebelum WhatsApp menghapus media tersebut dari server.",
+
+		"Tidak ada argumen yang diperlukan untuk perintah ini.",
+	},
+	SeeAlso: []SeeAlso{
+		{
+			Content: "https://faq.whatsapp.com/1077018839582332",
+			Type:    SeeAlsoTypeExternalLink,
+		},
+	},
+	Source: "vo.go",
+}
+
 var (
 	ACCEPT string = "✅"
 	DENY   string = "❌"

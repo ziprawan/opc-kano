@@ -14,6 +14,19 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
+var ShippingMan = CommandMan{
+	Name:     "shipping - Pasangan 2 orang harian",
+	Synopsis: []string{"shipping"},
+	Description: []string{
+		"_*PERINGATAN: Perintah ini benar-benar memilih 2 orang secara acak semata dan diharapkan tidak ada kegaduhan yang disebabkan oleh fitur ini.*_",
+		"Memilih 2 orang secara acak dalam partisipan grup dan dijadikan sebagai pasangan. Perintah ini hanya dapat digunakan di dalam grup dan menyimpannya di basis data. Pasangan akan di-reset pada pukul 00.00 zona waktu UTC.",
+		"Tidak ada argumen yang diperlukan untuk perintah ini.",
+	},
+
+	SeeAlso: []SeeAlso{},
+	Source:  "shipping.go",
+}
+
 func randomSelectAndRemove(s []string) ([]string, string) {
 	selectedIdx := rand.Intn(len(s))
 	selected := s[selectedIdx]

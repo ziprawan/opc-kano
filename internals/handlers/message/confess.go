@@ -15,6 +15,44 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+var ConfessMan = CommandMan{
+	Name:     "confess - Kirim pesan anonim ke grup",
+	Synopsis: []string{"confess KONTEN ..."},
+	Description: []string{
+		"Perintah ini hanya bisa digunakan dalam chat pribadi ke bot.",
+		"Mengirim pesan teks atau media secara anonim ke grup. Bot akan mengirim pesan anonim tersebut ke grup yang dituju dengan sedikit modifikasi dimana pesan akan diawali dengan \"Ada konfes dari seseorang nih!\" terlebih dahulu",
+		"Jika bot menemukan bahwa pengirim ada di dalam beberapa grup yang sama dengan bot, pengirim akan diminta untuk mengatur target grup sebelum menggunakan perintah ini lagi (lihat perintah confesstarget).",
+		"Pengirim bisa mengirim pesan teks hanya cukup mengirim confess tanpa media apapun. Untuk mengirim pesan media, bisa mengirim media yang diinginkan disertai caption yang berisi perintah confess beserta kontennya. Pengirim juga bisa me-reply pesan media yang pernah dikirim sebelumnya selama media tersebut belum kedaluwarsa.",
+
+		"*KONTEN (Wajib)*\n{SPACE}Konten dari pesan anonim yang ingin dikirim ke grup.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{
+			Content: "confesstarget",
+			Type:    "command",
+		},
+	},
+	Source: "confess.go",
+}
+
+var ConfessTargetMan = CommandMan{
+	Name:     "confesstarget - Atur target grup untuk pesan anonim",
+	Synopsis: []string{"confesstarget [ID_GRUP]"},
+	Description: []string{
+		"Mengatur target grup untuk dijadikan sebagai tempat pengiriman pesan anonim. Perintah ini hanya dapat digunakan di dalam chat pribadi bot.",
+		"Jika bot mendeteksi bahwa pengirim ada di beberapa grup yang sama dengan bot saat menggunakan perintah confess, maka pengirim akan diwajibkan untuk mengaturnya terlebih dahulu menggunakan perintah ini.",
+		"Semua argumen bersifat opsional. Jika ID_GRUP tidak berikan, maka bot akan memberikan daftar id dan nama grup yang sama dengan bot, sehingga diharapkan pengirim bisa memanggil fungsi ini kembali dengan argumen ID_GRUP.",
+
+		"*ID_GRUP*\n{SPACE}ID dari grup yang bisa diambil dengan mengirim perintah ini tanpa argumen. Argumen yang diberikan harus berupa bilangan bulat positif, selain itu bot tidak memproses perintah ini. Begitu juga untuk ID grup tidak ditemukan, bot juga tidak akan memproses perintah ini.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "confess", Type: SeeAlsoTypeCommand},
+	},
+	Source: "confess.go",
+}
+
 type GroupIDJID struct {
 	ID   int64     `json:"id"`
 	JID  types.JID `json:"jid"`

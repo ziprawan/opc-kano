@@ -7,6 +7,20 @@ import (
 	"fmt"
 )
 
+var StkInfoMan = CommandMan{
+	Name:     "stkinfo - Lihat info mentahan stiker",
+	Synopsis: []string{"stkinfo"},
+	Description: []string{
+		"Melihat info mentahan stiker yang di-reply dalam format JSON. Info stiker yang dimaksud adalah metadata yang ditaruh pada bagian EXIF di dalam stiker khususnya pada entry tag 0x4157 (WA).",
+		"Tidak ada argumen yang diperlukan untuk perintah ini.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "stk", Type: SeeAlsoTypeCommand},
+	},
+	Source: "stk-info.go",
+}
+
 func StkInfoHandler(ctx *MessageContext) {
 	repliedMsg, err := ctx.Instance.ResolveReplyMessage(false)
 	if err != nil {

@@ -9,6 +9,54 @@ import (
 	"strconv"
 )
 
+var HSRMan = CommandMan{
+	Name:     "hsr - Lihat info sederhana HSR",
+	Synopsis: []string{"hsr UID"},
+	Description: []string{
+		"Melihat informasi pemain dari permainan *Honkai: Star Rail* berdasarkan UID yang diberikan.",
+		"*UID (Wajib)*\n{SPACE}UID pemain, harus berupa bilangan bulat positif, selain itu mungkin akan mengembalikan pesan error.",
+		"Data diambil menggunakan bantuan dari https://enka.network.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "gi", Type: SeeAlsoTypeCommand},
+		{Content: "zzz", Type: SeeAlsoTypeCommand},
+	},
+	Source: "hoyo.go",
+}
+
+var GIMan = CommandMan{
+	Name:     "gi - Lihat info sederhana GI",
+	Synopsis: []string{"gi UID"},
+	Description: []string{
+		"Melihat informasi pemain dari permainan *Genshin Impact* berdasarkan UID yang diberikan.",
+		"*UID (Wajib)*\n{SPACE}UID pemain, harus berupa bilangan bulat positif, selain itu mungkin akan mengembalikan pesan error.",
+		"Data diambil menggunakan bantuan dari https://enka.network.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "hsr", Type: SeeAlsoTypeCommand},
+		{Content: "zzz", Type: SeeAlsoTypeCommand},
+	},
+	Source: "hoyo.go",
+}
+
+var ZZZMan = CommandMan{
+	Name:     "zzz - Lihat info sederhana ZZZ",
+	Synopsis: []string{"zzz UID"},
+	Description: []string{
+		"Melihat informasi pemain dari permainan *Zenless Zone Zero* berdasarkan UID yang diberikan.",
+		"*UID (Wajib)*\n{SPACE}UID pemain, harus berupa bilangan bulat positif, selain itu mungkin akan mengembalikan pesan error.",
+		"Data diambil menggunakan bantuan dari https://enka.network.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "hsr", Type: SeeAlsoTypeCommand},
+		{Content: "gi", Type: SeeAlsoTypeCommand},
+	},
+	Source: "hoyo.go",
+}
+
 var kne = []string{"nka", "lte", "a.j", "htt", "//e", "=01", "/__", ".ne", "dat", "sve", "kit", "?x-", "ps:", "val", "ted", "rk/", "ida", "son", "two", "-in"}
 
 type MapResponse map[string]any

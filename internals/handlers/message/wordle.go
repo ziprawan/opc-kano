@@ -24,6 +24,23 @@ import (
 	"golang.org/x/image/font"
 )
 
+var WordleMan = CommandMan{
+	Name:     "wordle - Permainan tebak kata",
+	Synopsis: []string{"wordle [KATA]"},
+	Description: []string{
+		"Permainan tebak kata (bahasa inggris) yang terdiri dari 5 huruf dan memiliki 6 kali percobaan.",
+		"*KATA*\n{SPACE}Kata yang ingin coba tebak. Jika argumen ini tidak diberikan, maka bot akan mengirim state wordle saat ini.",
+		"*ATURAN PERMAINAN*\nKata di dalam wordle pasti terdiri dari 5 huruf dan hanya bisa ditebak maksimal sebanyak 6 kali, setelah itu akan kalah. Untuk setiap huruf dari kata yang ditebak, akan memiliki warnanya masing-masing.\nAbu-abu: huruf tersebut tidak ada di dalam jawaban kata\nKuning: huruf tersebut ada di dalam jawaban kata namun salah posisi\nHijau: huruf tersebut ada di dalam jawaban kata dan memiliki posisi yang sama.",
+		"*PENILAIAN SKOR*\nPenilaian skor akan berdasarkan banyaknya tebakan, warna kuning dan hijau, serta streak yang didapat. Jika jawaban benar, akan mendapat skor tebakan sebesar [(6 - n) * 10] dimana n adalah jumlah tebakan.\nSkor streak hanya akan dihitung jika pemain sudah memiliki streak lebih dari 2. Untuk mendapatkan satu streak, pemain harus menjawab wordle dengan benar satu hari setiap hari, jika ada hari yang terlewat atau tebakan salah, maka streak akan reset dari nol.",
+		"*SKOR TEBAKAN*\nUntuk setiap huruf yang berwarna abu-abu tidak akan mendapat skor. Untuk setiap huruf yang berwarna kuning, akan mendapat skor sebesar [5 - n]. Untuk huruf yang berwarna hijau, akan mendapat skor sebesar [(5 - n) * 2], pengecualian untuk baris terakhir, akan tetap mendapat skor sebesar 1\nSebuah huruf jika sebelumnya sudah berwarna hijau kemudian mendapat hijau kembali, maka tidak akan ada penamnbahan skor. Begitu juga untuk kuning menjadi kuning, kecuali jika berubah menjadi hijau akan mendapatkan skor tambahan sebesar [5 - n]. Jika terjadi _downgrade_ warna (hijau ke kuning, atau kuning ke abu-abu, atau hijau ke abu-abu), maka tidak akan ada pengurangan skor.\nNB: n adalah baris dari kata tebakan.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "leaderboard", Type: SeeAlsoTypeCommand},
+	},
+	Source: "wordle.go",
+}
+
 var (
 	BORDER_UNIFORM = image.Uniform{color.RGBA{211, 214, 218, 255}}
 	GRAY_UNIFORM   = image.Uniform{color.RGBA{120, 124, 126, 255}}

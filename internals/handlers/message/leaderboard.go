@@ -7,6 +7,22 @@ import (
 	"strings"
 )
 
+var LeaderboardMan = CommandMan{
+	Name:     "leaderboard - Papan peringkat grup",
+	Synopsis: []string{"leaderboard"},
+	Description: []string{
+		"Menampilkan papan peringkat (leaderboard) dari partisipan di grup. Perintah ini hanya bisa digunakan di dalam grup.",
+		"Papan peringkat akan mengurutkan dan mengambil 5 skor permainan terbesar dari partisipan grup. Serta mengambil rank dan skor permainan dari sang pengirim meskipun bukan masuk ke dalam 5 terbesar.\nPartisipan yang memiliki skor permainan 0 tidak akan dihitung di dalam rank.",
+		"Nama yang tertera di dalam papan peringkat akan memprioritaskan nama custom yang pernah diatur oleh partisipan. Jika tidak ada, maka akan menggunakan nama WhatsApp-nya, kemudian nomor telepon dalam format internasional tanpa tanda tambah.",
+		"Tidak ada argumen yang diperlukan untuk perintah ini.",
+	},
+
+	SeeAlso: []SeeAlso{
+		{Content: "setname", Type: SeeAlsoTypeCommand},
+	},
+	Source: "leaderboard.go",
+}
+
 const LEADERBOARD_QUERY = `WITH
 	"ranked" AS (
 		SELECT
