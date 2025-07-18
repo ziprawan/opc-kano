@@ -67,6 +67,11 @@ func Web() {
 		c.File("templates/images/favicon.webp")
 	})
 
+	r.Any("/api/headers", func(c *gin.Context) {
+		fmt.Println(c.Request.Header)
+		c.JSON(200, c.Request.Header)
+	})
+
 	r.GET("/", func(c *gin.Context) {
 		conf := projectconfig.GetConfig()
 		h, exists := c.Get("h")
