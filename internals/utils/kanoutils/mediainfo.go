@@ -9,6 +9,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/kolesa-team/go-webp/decoder"
+	"github.com/kolesa-team/go-webp/webp"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 )
 
@@ -95,7 +97,10 @@ func GenerateVideoInfo(videoBytes []byte) (*KanoVideoInfo, error) {
 func GenerateImageInfo(imgBytes []byte) (*KanoImageInfo, error) {
 	decoded, _, err := image.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
-		return nil, err
+		decoded, err = webp.Decode(bytes.NewReader(imgBytes), &decoder.Options{})
+		if err != nil {
+			return nil, err
+		}
 	}
 	bounds := decoded.Bounds()
 

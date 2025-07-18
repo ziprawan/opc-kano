@@ -7,13 +7,18 @@ import (
 	"math"
 
 	"github.com/disintegration/imaging"
+	"github.com/kolesa-team/go-webp/decoder"
+	"github.com/kolesa-team/go-webp/webp"
 )
 
 // GenerateThumbnail melakukan crop + resize sesuai spesifikasi
 func GenerateThumbnail(imgBytes []byte) ([]byte, error) {
-	img, err := jpeg.Decode(bytes.NewReader(imgBytes))
+	img, _, err := image.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
-		return nil, err
+		img, err = webp.Decode(bytes.NewReader(imgBytes), &decoder.Options{})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	w := img.Bounds().Dx()
