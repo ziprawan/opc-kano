@@ -1,17 +1,11 @@
 package message
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"kano/internals/utils/kanoutils"
-	"os"
-	"time"
 
-	ffmpeg "github.com/u2takey/ffmpeg-go"
-	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/proto/waE2E"
-	"google.golang.org/protobuf/proto"
+	"go.mau.fi/whatsmeow/binary"
+	"go.mau.fi/whatsmeow/types"
 )
 
 type MessageHandlerFunc func(ctx *MessageContext)
@@ -127,6 +121,10 @@ var MESSAGE_HANDLERS MessageHandlerFuncMap = MessageHandlerFuncMap{
 		Man:     SetnameMan,
 		Aliases: []string{"name"},
 	},
+	"down": MessageHandler{
+		Func: DownloaderHandler,
+		Man:  DownloaderMan,
+	},
 	"test": MessageHandler{
 		Man: CommandMan{
 			Name:     "test - Test",
@@ -139,72 +137,35 @@ var MESSAGE_HANDLERS MessageHandlerFuncMap = MessageHandlerFuncMap{
 			Source:  "COMMANDS.go",
 		},
 		Func: func(ctx *MessageContext) {
-			vidBytes, err := os.ReadFile("assets/birdbrain.mp4")
-			if err != nil {
-				ctx.Instance.Reply(fmt.Sprintf("Errored when reading assets/birdbrain.mp4: %s", err), true)
-				return
-			}
-			first := time.Now().UnixMilli()
-
-			reader := bytes.NewReader(vidBytes)
-			fmt.Println(reader.Size())
-			buf := bytes.NewBuffer(nil)
-			cmd := ffmpeg.Input("pipe:0", ffmpeg.KwArgs{
-				"analyzeduration": "100M",
-				"probesize":       "100M",
-			}).
-				Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", 1)}).
-				Output("pipe:1", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg", "pix_fmt": "yuvj420p"}).
-				WithInput(reader).WithOutput(buf, os.Stdout)
-
-			fmt.Println("Executing", cmd.Compile())
-			err = cmd.Run()
-			if err != nil {
-				ctx.Instance.Reply(fmt.Sprintf("Errored when getting the first frame of the video: %s", err), true)
-				return
-			}
-
-			frameInfo, err := kanoutils.GenerateImageInfo(buf.Bytes())
-			if err != nil {
-				ctx.Instance.Reply(fmt.Sprintf("Errored when generating image info: %s", err), true)
-				return
-			}
-
-			resp, err := ctx.Instance.Upload(vidBytes, whatsmeow.MediaVideo)
-			if err != nil {
-				ctx.Instance.Reply(fmt.Sprintf("Errored when uploading the media: %s", err), true)
-				return
-			}
-			last := time.Now().UnixMilli()
-
-			fmt.Printf("Response: %+v\n", resp)
-
-			vidMsg := &waE2E.VideoMessage{
-				URL:           &resp.URL,
-				DirectPath:    &resp.DirectPath,
-				MediaKey:      resp.MediaKey,
-				FileEncSHA256: resp.FileEncSHA256,
-				FileSHA256:    resp.FileSHA256,
-				FileLength:    &resp.FileLength,
-				Caption:       proto.String(fmt.Sprintf("Upload time: %d ms", last-first)),
-				Mimetype:      proto.String("video/mp4"),
-
-				Width:         &frameInfo.Width,
-				Height:        &frameInfo.Height,
-				JPEGThumbnail: frameInfo.JPEGThumbnail,
-			}
-
-			targetJID := ctx.Instance.ChatJID()
-			fmt.Printf("Vidmsg: %+v\nTarget JID: %s", vidMsg, targetJID.String())
-
-			resp2, err := ctx.Instance.Client.SendMessage(context.Background(), *ctx.Instance.ChatJID(), &waE2E.Message{
-				VideoMessage: vidMsg,
+			jid, _ := types.ParseJID("6282112981691@s.whatsapp.net")
+			list, err := ctx.Instance.Client.DangerousInternals().Usync(context.TODO(), []types.JID{jid}, "full", "background", []binary.Node{
+				{Tag: "business", Content: []binary.Node{{Tag: "verified_name"}}},
+				{Tag: "status"},
+				{Tag: "picture"},
+				{Tag: "devices", Attrs: binary.Attrs{"version": "2"}},
 			})
 			if err != nil {
-				fmt.Println("Error nich")
+				ctx.Instance.Reply(err.Error(), true)
+				return
 			} else {
-				fmt.Printf("%+v\n", resp2)
+				ctx.Instance.Reply(fmt.Sprintf("%+v", list), true)
 			}
+			// msg := &waE2E.Message{
+			// 	ProtocolMessage: &waE2E.ProtocolMessage{
+			// 		Key: &waCommon.MessageKey{
+			// 			RemoteJID: proto.String(ctx.Instance.ChatJID().String()),
+			// 			FromMe:    proto.Bool(true),
+			// 		},
+			// 		Type: waE2E.ProtocolMessage_LIMIT_SHARING.Enum(),
+			// 		LimitSharing: &waCommon.LimitSharing{
+			// 			SharingLimited:               proto.Bool(true),
+			// 			Trigger:                      waCommon.LimitSharing_CHAT_SETTING.Enum(),
+			// 			LimitSharingSettingTimestamp: proto.Int64(time.Now().UnixMilli()),
+			// 			InitiatedByMe:                proto.Bool(true),
+			// 		},
+			// 	},
+			// }
+			// ctx.Instance.Client.SendMessage(context.Background(), *ctx.Instance.ChatJID(), msg)
 		},
 	},
 }

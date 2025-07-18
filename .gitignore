@@ -4,3 +4,4 @@ json/
 env.sh
 json/
 dump/
+tmp/
