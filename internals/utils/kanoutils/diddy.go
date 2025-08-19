@@ -175,6 +175,25 @@ func decryptSearchResult(body []byte, key, iv string) ([]byte, error) {
 	return decrypted, nil
 }
 
+func fetchDiddy(url string) (*http.Response, error) {
+	origUrl := strings.Replace(buildDiddyUrl(), "api-", "", 1)
+	origUrl = strings.Replace(origUrl, ".go.id/", ".go.id", 1)
+
+	client := http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(origUrl)
+
+	// Fix 403 status
+	req.Header.Set("Origin", origUrl)
+	req.Header.Set("Referer", origUrl)
+
+	return client.Do(req)
+}
+
 func SearchDiddy(query, key, iv string) (*DiddySearchResult, error) {
 	url := fmt.Sprintf(
 		"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
@@ -201,7 +220,7 @@ func SearchDiddy(query, key, iv string) (*DiddySearchResult, error) {
 		query,
 	)
 
-	resp, err := http.Get(url)
+	resp, err := fetchDiddy(url)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +250,7 @@ func SearchDiddy(query, key, iv string) (*DiddySearchResult, error) {
 func GetMHSDetails(mhsID string) (*DiddyDetailsMHS, error) {
 	url := buildDiddyUrl("detail", "mhs", mhsID)
 	fmt.Println("Fetching:", url)
-	resp, err := http.Get(url)
+	resp, err := fetchDiddy(url)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +271,7 @@ func GetPNSDetails(pnsID string) (*DiddyDetailsPNS, error) {
 
 	// PNS Detail
 	profileUrl := buildDiddyUrl("dosen", "profile", pnsID)
-	resp, err := http.Get(profileUrl)
+	resp, err := fetchDiddy(profileUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +283,7 @@ func GetPNSDetails(pnsID string) (*DiddyDetailsPNS, error) {
 
 	// Study Histories
 	sHistoryUrl := buildDiddyUrl("dosen", "study-history", pnsID)
-	resp, err = http.Get(sHistoryUrl)
+	resp, err = fetchDiddy(sHistoryUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +296,7 @@ func GetPNSDetails(pnsID string) (*DiddyDetailsPNS, error) {
 	// Teaching Histories
 	var tHistories []DiddyPNSTeachHistory
 	tHistoryUrl := buildDiddyUrl("dosen", "teaching-history", pnsID)
-	resp, err = http.Get(tHistoryUrl)
+	resp, err = fetchDiddy(tHistoryUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +312,7 @@ func GetPNSDetails(pnsID string) (*DiddyDetailsPNS, error) {
 	portfolios := []string{"penelitian", "pengabdian", "karya", "paten"}
 	for _, portfolioType := range portfolios {
 		portfolioUrl := buildDiddyUrl("dosen", "portofolio", portfolioType, pnsID)
-		resp, err = http.Get(portfolioUrl)
+		resp, err = fetchDiddy(portfolioUrl)
 		if err != nil {
 			return nil, err
 		}
