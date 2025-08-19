@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-co-op/gocron/v2"
 	_ "github.com/lib/pq"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store"
@@ -19,11 +20,14 @@ import (
 
 	"kano/internals/database"
 	handlers "kano/internals/handlers"
+	"kano/internals/handlers/cron"
 	projectConfig "kano/internals/project_config"
 	"kano/internals/utils/account"
 	"kano/internals/utils/data"
 	webhandlers "kano/web_handlers"
 )
+
+var sched gocron.Scheduler = nil
 
 // Still copied from whatsmeow's example
 // Gonna tidy up later after learn enough about Go
@@ -70,6 +74,12 @@ func main() {
 			account.SetPushName(deviceStore.PushName)
 			client.SetForceActiveDeliveryReceipts(true)
 			client.SendPresence(types.PresenceAvailable)
+
+			s, err := cron.StartAllCron(client)
+			if err != nil {
+				fmt.Println("[CRONJOB] Failed to start cron job:", err)
+			}
+			sched = s
 		case *events.Contact:
 			marshal, err := json.MarshalIndent(v, "", "  ")
 			fmt.Println("Got new contact event: ", string(marshal), err)
@@ -132,4 +142,8 @@ func main() {
 	<-sign
 
 	client.Disconnect()
+	err = sched.Shutdown()
+	if err != nil {
+		fmt.Println("[CRONJOB] Failed to shutdown cronjob:", err)
+	}
 }

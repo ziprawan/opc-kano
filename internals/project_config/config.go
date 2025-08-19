@@ -10,22 +10,20 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
-type NullJID struct {
-	JID   types.JID
-	Valid bool
-}
-
 type NullString struct {
 	String string
 	Valid  bool
 }
 
 type Config struct {
-	SessionName   string
-	DatabaseURL   string
-	OwnerJID      types.JID
-	JWTSecret     []byte
-	ConfessTarget NullJID
+	SessionName string
+	DatabaseURL string
+	OwnerJID    types.JID
+	JWTSecret   []byte
+
+	// Google OAuth 2.0
+	GoogleID     string
+	GoogleSecret string
 
 	// These fields are optional
 
@@ -58,30 +56,26 @@ func LoadConfig() *Config {
 			panic(err)
 		}
 
-		confessTargetEnv, err := getEnv("CONFESS_TARGET")
-		if err != nil {
-			panic(err)
-		}
-
-		confessTarget := NullJID{Valid: false}
-		confessTargetJID, err := types.ParseJID(confessTargetEnv)
-		if err != nil {
-			fmt.Println("CONFESS_TARGET might not a valid JID")
-		} else {
-			confessTarget.JID = confessTargetJID
-			confessTarget.Valid = true
-		}
-
 		if _, err := strconv.Atoi(ownerJID); err != nil {
 			panic(err)
 		}
 
+		googleId, err := getEnv("GOOGLE_ID")
+		if err != nil {
+			panic(err)
+		}
+		googleSecret, err := getEnv("GOOGLE_SECRET")
+		if err != nil {
+			panic(err)
+		}
+
 		configInstance = &Config{
-			SessionName:   sessionName,
-			DatabaseURL:   databaseURL,
-			OwnerJID:      types.NewJID(ownerJID, "s.whatsapp.net"),
-			JWTSecret:     []byte(JWTSecret),
-			ConfessTarget: confessTarget,
+			SessionName:  sessionName,
+			DatabaseURL:  databaseURL,
+			OwnerJID:     types.NewJID(ownerJID, "s.whatsapp.net"),
+			JWTSecret:    []byte(JWTSecret),
+			GoogleID:     googleId,
+			GoogleSecret: googleSecret,
 		}
 
 		pddiktiKey, _ := getEnv("PDDIKTI_KEY")

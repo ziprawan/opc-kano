@@ -5,3 +5,4 @@ env.sh
 json/
 dump/
 tmp/
+local/*.json
