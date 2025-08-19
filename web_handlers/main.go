@@ -59,6 +59,10 @@ func Web() {
 	tmpl = template.Must(tmpl.ParseGlob("templates/**/*.html"))
 	r.SetHTMLTemplate(tmpl)
 
+	r.Any("/privacy-policy", func(c *gin.Context) {
+		c.File("assets/privacy-policy.html")
+	})
+
 	r.GET("/css/generated-tailwind.css", func(c *gin.Context) {
 		c.File("templates/css/generated-tailwind.css")
 	})
@@ -67,12 +71,16 @@ func Web() {
 		c.File("templates/images/favicon.webp")
 	})
 
+	r.GET("/images/kano.jpg", func(c *gin.Context) {
+		c.File("templates/images/kano.jpg")
+	})
+
 	r.Any("/api/headers", func(c *gin.Context) {
 		fmt.Println(c.Request.Header)
 		c.JSON(200, c.Request.Header)
 	})
 
-	r.GET("/", func(c *gin.Context) {
+	r.GET("/dashboard", func(c *gin.Context) {
 		conf := projectconfig.GetConfig()
 		h, exists := c.Get("h")
 
@@ -120,7 +128,11 @@ func Web() {
 			}
 		}
 
-		c.HTML(200, "home/index.html", h)
+		c.HTML(200, "dashboard/index.html", h)
+	})
+
+	r.GET("/", func(c *gin.Context) {
+		c.File("assets/index.html")
 	})
 
 	r.GET("/auth/logout", func(c *gin.Context) {

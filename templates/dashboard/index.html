@@ -1,20 +1,20 @@
-{{ define "home/index.html" }}
+{{ define "dashboard/index.html" }}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>[Dev] OPC Bot | Home</title>
+    <title>[Dev] OPC Bot | {{ .title }}</title>
     <link rel="icon" type="image/webp" href="/images/favicon.webp" />
     <link href="/css/generated-tailwind.css" rel="stylesheet" />
   </head>
   <body class="bg-white text-black dark:bg-[#0f172a] dark:text-[#e2e8f0]">
-    <!-- {{ template "components/navbar.html" .navbar }} -->
+    {{ template "components/navbar.html" .navbar }}
     <!-- Real content -->
     <div class="max-h-[calc(100vh-6.5rem)] py-5 overflow-auto space-y-3">
       <header>
-        <h1 class="text-center font-bold text-3xl">OPC - Kano</h1>
-        <img src=""
+        <h1 class="text-center font-bold text-3xl">OPC Dashboard</h1>
+        <p class="text-center">{{ .navbar.name }}</p>
       </header>
       <div class="px-5 flex justify-center">
         <div class="max-w-[768px] grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
