@@ -177,11 +177,15 @@ func decryptSearchResult(body []byte, key, iv string) ([]byte, error) {
 
 func fetchDiddy(url string) (*http.Response, error) {
 	origUrl := strings.Replace(buildDiddyUrl(), "api-", "", 1)
+	origUrl = strings.Replace(origUrl, ".go.id/", ".go.id", 1)
+
 	client := http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(origUrl)
 
 	// Fix 403 status
 	req.Header.Set("Origin", origUrl)
