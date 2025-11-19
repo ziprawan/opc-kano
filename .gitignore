@@ -1,6 +1,7 @@
 logs/*
 build/*
 json/*
+env.sh
 
 !logs/.gitkeep
 !build/.gitkeep
