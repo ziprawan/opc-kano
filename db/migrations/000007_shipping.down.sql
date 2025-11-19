@@ -1,3 +1,0 @@
-BEGIN;
-DROP TABLE IF EXISTS group_settings;
-COMMIT;

@@ -1,8 +1,7 @@
-build/
-json/
-.vscode/
-env.sh
-json/
-dump/
-tmp/
-local/*.json
+logs/*
+build/*
+json/*
+
+!logs/.gitkeep
+!build/.gitkeep
+!json/.gitkeep
