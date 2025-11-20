@@ -15,6 +15,8 @@ func Handle(cli *whatsmeow.Client, evt any) error {
 		return Connected(cli)
 	case *events.Disconnected:
 		return Disconnected()
+	case *events.KeepAliveTimeout:
+		return KeepAliveTimeout(ev)
 	case *events.LoggedOut:
 		return Login(cli)
 	case *events.Message:
@@ -29,6 +31,8 @@ func Handle(cli *whatsmeow.Client, evt any) error {
 		return Receipt(ev)
 	case *events.UndecryptableMessage:
 		return UndecryptableMessage(cli, ev)
+	case *events.UserAbout:
+		return UserAbout(ev)
 	default:
 		return defaultHandler(ev)
 	}
