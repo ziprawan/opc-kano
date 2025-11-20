@@ -1,3 +1,4 @@
+source env.sh
 go build -v -o build/main
 ret=$?
 if [ ! $ret -eq 0 ]; then 

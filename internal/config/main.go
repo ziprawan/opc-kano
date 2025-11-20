@@ -13,9 +13,15 @@ var parserObj *parser.Parser
 var configObj *Config
 
 func Init() {
-	log = logger.Init("Kano", logLevel)
-	parserObj = parser.Init([]string{"/", "!", ".", "/ ", "! ", ". "})
-	configObj = InitConfig()
+	if log == nil {
+		log = logger.Init("Kano", logLevel)
+	}
+	if parserObj == nil {
+		parserObj = parser.Init([]string{"/", "!", ".", "/ ", "! ", ". "})
+	}
+	if configObj == nil {
+		configObj = InitConfig()
+	}
 }
 
 func GetLogger() *logger.Logger {
