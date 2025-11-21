@@ -4,8 +4,12 @@ import (
 	"encoding/binary"
 )
 
-func ByteToInt32LSB(bytes []byte) int {
-	return int(binary.LittleEndian.Uint32(bytes))
+func ByteToUint32LSB(bytes []byte) int {
+	copied := make([]byte, 4)
+	for i := range len(bytes) {
+		copied[i] = bytes[i]
+	}
+	return int(binary.LittleEndian.Uint32(copied))
 }
 
 func Int32ToByteLSB(num int) []byte {
@@ -14,8 +18,12 @@ func Int32ToByteLSB(num int) []byte {
 	return b
 }
 
-func ByteToInt16LSB(bytes []byte) int {
-	return int(binary.LittleEndian.Uint16(bytes))
+func ByteToUint16LSB(bytes []byte) int {
+	copied := make([]byte, 2)
+	for i := range len(bytes) {
+		copied[i] = bytes[i]
+	}
+	return int(binary.LittleEndian.Uint16(copied))
 }
 
 func Int16ToByteLSB(num int) []byte {
