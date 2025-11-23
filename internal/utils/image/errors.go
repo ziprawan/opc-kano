@@ -12,6 +12,9 @@ var (
 	ErrInvalidChunkNameLength = errors.New("chunk name length is not 4")
 	ErrNoImageData            = errors.New("given Chunks doesn't have any image data")
 	ErrDoubleImageData        = errors.New("given chunks has 2 or more image data")
+
+	ErrEmptyPayload = errors.New("given payload is empty")
+	ErrHasPayload   = errors.New("given chunk already has data")
 )
 
 var (

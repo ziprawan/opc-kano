@@ -27,6 +27,8 @@ func Handle(cli *whatsmeow.Client, evt any) error {
 		return OfflineSyncPreview(ev)
 	case *events.Picture:
 		return Picture(ev)
+	case *events.PushName:
+		return PushName(ev)
 	case *events.Receipt:
 		return Receipt(ev)
 	case *events.UndecryptableMessage:

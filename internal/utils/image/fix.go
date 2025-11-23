@@ -2,19 +2,20 @@ package image
 
 import (
 	"encoding/binary"
-	"fmt"
+	"kano/internal/utils/numbers"
 	"math"
-	"strconv"
 )
 
 var BOOL_STR = map[bool]string{true: "1", false: "0"}
 
-func changeAttr(attr string, idx int, newAttr bool) string {
-	changedAttr := attr[:idx] + BOOL_STR[newAttr]
-	if idx != len(attr)-1 {
-		changedAttr += attr[idx:]
+func changeAttr(attr byte, idx int, newAttr bool) byte {
+	if newAttr {
+		attr |= (1 << idx)
+	} else {
+		attr &= (0xff - (1 << idx))
 	}
-	return changedAttr
+
+	return attr
 }
 
 func uintTo24Bit(num uint) [3]byte {
@@ -34,30 +35,53 @@ func uintTo24Bit(num uint) [3]byte {
 	return res
 }
 
-func FixWebPExtendedChunks(chunks Chunks, imageWidth, imageHeight uint) Chunks {
-	vp8x, ok := chunks["VP8X"]
-	if !ok || len(vp8x) != 10 {
+// This will assume that the riff payload is ALL VALID.
+// Just blindly take the payload length and put it in the RIFF header
+func FixRIFFHeader(riffBytes []byte) ([]byte, error) {
+	riffHeader := riffBytes[:8]
+	if string(riffHeader[:4]) != "RIFF" {
+		return nil, ErrNotRIFF
+	}
+
+	riffPayload := riffBytes[8:]
+	riffPayloadSize := numbers.ByteToUint32LSB(riffBytes[4:8])
+	if riffPayloadSize != len(riffPayload) {
+		newRiffBytes := []byte("RIFF")
+		newRiffBytes = append(newRiffBytes, numbers.Int32ToByteLSB(len(riffPayload))...)
+		newRiffBytes = append(newRiffBytes, riffPayload...)
+
+		return newRiffBytes, nil
+	} else {
+		return riffBytes, nil
+	}
+}
+
+// Fix the VP8X data in the WebPChunk
+func FixWebPExtendedChunks(chunks WebPChunk) WebPChunk {
+	vp8x := chunks.vp8x
+	if len(vp8x) == 0 {
+		// We might not need VP8X
+		return chunks
+	}
+	if len(vp8x) != 10 {
 		vp8x = make([]byte, 10)
 	}
 
-	_, hasICCP := chunks["ICCP"]
-	_, hasALPH := chunks["ALPH"]
-	_, hasEXIF := chunks["EXIF"]
-	_, hasXMP := chunks["XMP "]
-	_, hasANIM := chunks["ANIM"]
+	hasICCP := len(chunks.iccp) != 0
+	hasALPH := len(chunks.alph) != 0
+	hasEXIF := len(chunks.exif) != 0
+	hasXMP := len(chunks.xmp) != 0
+	hasANIM := len(chunks.anim) != 0 && len(chunks.anmf) != 0
 
-	attr := fmt.Sprintf("%08b", vp8x[0])
-	attr = changeAttr(attr, 2, hasICCP)
-	attr = changeAttr(attr, 3, hasALPH)
-	attr = changeAttr(attr, 4, hasEXIF)
-	attr = changeAttr(attr, 5, hasXMP)
-	attr = changeAttr(attr, 6, hasANIM)
+	vp8x[0] = changeAttr(vp8x[0], 1, hasANIM)
+	vp8x[0] = changeAttr(vp8x[0], 2, hasXMP)
+	vp8x[0] = changeAttr(vp8x[0], 3, hasEXIF)
+	vp8x[0] = changeAttr(vp8x[0], 4, hasALPH)
+	vp8x[0] = changeAttr(vp8x[0], 5, hasICCP)
 
-	attrByte, _ := strconv.ParseUint(attr, 2, 0)
-	vp8x[0] = byte(attrByte)
-
-	widthByte := uintTo24Bit(imageWidth - 1)
-	heightByte := uintTo24Bit(imageHeight - 1)
+	size := chunks.GetImageSize()
+	widthByte := uintTo24Bit(uint(size.Width) - 1)
+	heightByte := uintTo24Bit(uint(size.Height) - 1)
 
 	vp8x[4] = widthByte[0]
 	vp8x[5] = widthByte[1]
@@ -66,6 +90,6 @@ func FixWebPExtendedChunks(chunks Chunks, imageWidth, imageHeight uint) Chunks {
 	vp8x[8] = heightByte[1]
 	vp8x[9] = heightByte[2]
 
-	chunks["VP8X"] = vp8x
+	chunks.vp8x = vp8x
 	return chunks
 }

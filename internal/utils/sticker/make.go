@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"os"
 	"strconv"
+	"time"
 
 	imageutil "kano/internal/utils/image"
 
@@ -118,6 +119,11 @@ func makeAnimatedSticker(docBytes []byte) ([]byte, error) {
 	stkBytes := make([]byte, buffer.Len())
 	buffer.Read(stkBytes)
 
+	stkBytes, err = imageutil.FixRIFFHeader(stkBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	return stkBytes, nil
 }
 
@@ -137,8 +143,8 @@ func appendMetadataToSticker(stickerByte []byte, metadata WhatsAppStickerMetadat
 		return nil, err
 	}
 
-	stickerChunks["EXIF"] = exif
-	stickerChunks = imageutil.FixWebPExtendedChunks(stickerChunks, STICKER_SIZE_PX, STICKER_SIZE_PX)
+	stickerChunks.SetChunk("EXIF", exif)
+	stickerChunks = imageutil.FixWebPExtendedChunks(stickerChunks)
 	newStickerByte, err := imageutil.BuildWebPFromChunks(stickerChunks)
 	if err != nil {
 		return nil, err
@@ -159,5 +165,8 @@ func MakeSticker(docBytes []byte, metadata WhatsAppStickerMetadata, isAnimated b
 		return nil, err
 	}
 
-	return appendMetadataToSticker(sticker, metadata)
+	appended, err := appendMetadataToSticker(sticker, metadata)
+	os.WriteFile(fmt.Sprintf("%d.webp", time.Now().Unix()), appended, 0644)
+
+	return appended, err
 }
