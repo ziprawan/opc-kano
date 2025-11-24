@@ -54,16 +54,20 @@ func BuildWebPFromChunks(chunks WebPChunk) ([]byte, error) {
 		riffPayload = append(riffPayload, generateChunk("VP8X", chunks.vp8x)...)
 	}
 
-	riffPayload = append(riffPayload, generateChunk("VP8 ", chunks.vp8)...)
-	riffPayload = append(riffPayload, generateChunk("VP8L", chunks.vp8l)...)
+	// All chunks necessary for reconstruction and color correction, that is,
+	// 'VP8X', 'ICCP', 'ANIM', 'ANMF', 'ALPH', 'VP8 ', and 'VP8L', MUST appear in the order described earlier.
+	// Readers SHOULD fail when chunks necessary for reconstruction and color correction are out of order.
+	riffPayload = append(riffPayload, generateChunk("ICCP", chunks.iccp)...)
 	riffPayload = append(riffPayload, generateChunk("ANIM", chunks.anim)...)
 	for _, anmf := range chunks.anmf {
 		riffPayload = append(riffPayload, generateChunk("ANMF", anmf)...)
 	}
 	riffPayload = append(riffPayload, generateChunk("ALPH", chunks.alph)...)
+	riffPayload = append(riffPayload, generateChunk("VP8 ", chunks.vp8)...)
+	riffPayload = append(riffPayload, generateChunk("VP8L", chunks.vp8l)...)
+
 	riffPayload = append(riffPayload, generateChunk("XMP ", chunks.xmp)...)
 	riffPayload = append(riffPayload, generateChunk("EXIF", chunks.exif)...)
-	riffPayload = append(riffPayload, generateChunk("ICCP", chunks.iccp)...)
 	for _, extra := range chunks.extras {
 		riffPayload = append(riffPayload, generateChunk(extra.name, extra.payload)...)
 	}
