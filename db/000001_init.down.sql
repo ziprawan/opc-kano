@@ -1,0 +1,3 @@
+DROP INDEX IF EXISTS "student_name_idx";
+DROP TABLE IF EXISTS "students";
+DROP EXTENSION IF EXISTS "pg_trgm";

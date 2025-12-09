@@ -1,0 +1,9 @@
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "nim": 123456789,
+    "major": "Computer Science",
+    "faculty": "Computer Science"
+  }
+]
