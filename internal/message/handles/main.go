@@ -1,9 +1,12 @@
 package handles
 
 import (
+	"errors"
 	"kano/internal/config"
 	"kano/internal/utils/messageutil"
 )
+
+var ErrNotImplemented = errors.New("command not implemented")
 
 type MessageContext messageutil.MessageContext
 type CommandHandlerFunc func(ctx *messageutil.MessageContext) error
@@ -23,10 +26,29 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 	},
 	"stk": CommandHandler{
 		Func:    Stk,
-		Aliases: []string{"stk"},
+		Aliases: []string{"s"},
 	},
 	"vo": CommandHandler{
-		Func: Vo,
+		Func:    Vo,
+		Aliases: []string{"v"},
+	},
+	"nim": CommandHandler{
+		Func: Nim,
+	},
+	"pddikti": CommandHandler{
+		Func:    Pddikti,
+		Aliases: []string{"diddy"},
+	},
+	"confess": CommandHandler{
+		Func:    Confess,
+		Aliases: []string{"c"},
+	},
+	"six": CommandHandler{
+		Func: Six,
+	},
+	"redirect": CommandHandler{
+		Func:    Redirect,
+		Aliases: []string{"r", "getredir", "getloc"},
 	},
 }
 
