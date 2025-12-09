@@ -32,7 +32,7 @@ func (c *MessageContext) Reply(text string, quoted bool) (whatsmeow.SendResponse
 		msg.Conversation = proto.String(text)
 	}
 
-	return c.Client.SendMessage(c.GetChat(), &msg)
+	return c.SendMessage(&msg)
 }
 
 func (c *MessageContext) QuoteReply(text string, args ...any) (whatsmeow.SendResponse, error) {
@@ -68,7 +68,7 @@ func (c *MessageContext) ReplySticker(content []byte, quoted bool) (whatsmeow.Se
 		stkMsg.ContextInfo = c.BuildReplyContextInfo()
 	}
 
-	return c.Client.SendMessage(c.GetChat(), &waE2E.Message{
+	return c.SendMessage(&waE2E.Message{
 		StickerMessage: stkMsg,
 	})
 }

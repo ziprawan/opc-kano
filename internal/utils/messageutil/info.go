@@ -66,7 +66,11 @@ func (c *MessageContext) GetAddressingMode() types.AddressingMode {
 	return c.Info.AddressingMode
 }
 
-func (c *MessageContext) GetChat() types.JID {
+func (c *MessageContext) GetChat(leaveAsIs ...bool) types.JID {
+	if len(leaveAsIs) == 1 && leaveAsIs[0] {
+		return c.Info.Chat
+	}
+
 	if c.cache.chat != nil {
 		return *c.cache.chat
 	}
