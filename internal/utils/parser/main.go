@@ -25,6 +25,7 @@ type Argument struct {
 }
 
 type ParseResult struct {
+	Text    string
 	Command Command
 	Args    []Argument
 	RawArg  Argument
@@ -56,8 +57,15 @@ func (p Parser) getArgs(text string, command Command) (rawArg Argument, args []A
 		return
 	}
 
-	argsText := strings.Replace(text, command.Raw, "", 1) // Ngilangin command dari text asli
-	argsStartIdx := len(command.Raw)                      // Di index ke berapa args dimulai (not trimmed)
+	argsText := strings.TrimSpace(strings.Replace(text, command.Raw, "", 1)) // Ngilangin command dari text asli
+	argsStartIdx := len(text) - len(argsText)                                // Di index ke berapa args dimulai (not trimmed)
+	rawArg = Argument{
+		Content:     argsText,
+		Start:       argsStartIdx,
+		End:         len(text) - 1,
+		InsideQuote: false,
+		UsedQuote:   0,
+	}
 
 	var currentArgContent string = ""         // Menampung pembacaan arg
 	var currentArgStartIdx int = argsStartIdx // Buat naro arg dimulai dari index keberapa
@@ -127,6 +135,7 @@ func (p Parser) getArgs(text string, command Command) (rawArg Argument, args []A
 
 func (p Parser) Parse(text string) (res ParseResult) {
 	text = strings.TrimSpace(text)
+	res.Text = text
 
 	res.Command = p.getCommand(text)
 	if len(res.Command.Name) != 0 {
@@ -152,4 +161,56 @@ func (a Argument) GetAbsolutePosition() (int, int) {
 	}
 
 	return a.Start, a.End
+}
+
+// Return n-th until m-th argument and join them using single space.
+// This function might ignore the quote character
+func (r ParseResult) GetJoinedArg(n, m int) string {
+	if n >= len(r.Args) {
+		return ""
+	}
+	if m >= len(r.Args) {
+		m = len(r.Args) - 1
+	}
+	if m < n {
+		m = n
+	}
+
+	allArgsStr := []string{}
+	for i := n; i <= m; i++ {
+		allArgsStr = append(allArgsStr, r.Args[i].Content)
+	}
+
+	return strings.Join(allArgsStr, " ")
+}
+
+func (r ParseResult) GetAllJoinedArg() string {
+	return r.GetJoinedArg(0, len(r.Args)-1)
+}
+
+// Return n-th until m-th argument and join them using original space
+func (r ParseResult) GetOriginalArg(n, m int) string {
+	if n >= len(r.Args) {
+		return ""
+	}
+	if m >= len(r.Args) {
+		m = len(r.Args) - 1
+	}
+	if m < n {
+		m = n
+	}
+
+	first := r.Args[n]
+	last := r.Args[m]
+	firstIdx := first.Start
+	lastIdx := last.End
+
+	if first.InsideQuote {
+		firstIdx--
+	}
+	if last.InsideQuote {
+		lastIdx++
+	}
+
+	return r.Text[firstIdx : lastIdx+1]
 }
