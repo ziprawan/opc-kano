@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"kano/internal/logger"
 	"kano/internal/utils/parser"
 )
@@ -40,7 +39,7 @@ func GetParser() *parser.Parser {
 
 func GetConfig() *Config {
 	if configObj == nil {
-		panic(errors.New("config is not initialized! Call LoadConfig() first"))
+		Init()
 	}
 	return configObj
 }
