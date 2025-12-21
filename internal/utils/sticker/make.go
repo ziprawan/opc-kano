@@ -127,6 +127,17 @@ func makeAnimatedSticker(docBytes []byte) ([]byte, error) {
 	return stkBytes, nil
 }
 
+func fixSticker(chunks *imageutil.WebPChunk) {
+	if chunks == nil {
+		return
+	}
+
+	*chunks = imageutil.FixWebPExtendedChunks(*chunks)
+	if chunks.ANIM != nil {
+		(*chunks).ANIM.LoopCount = 0
+	}
+}
+
 func appendMetadataToSticker(stickerByte []byte, metadata WhatsAppStickerMetadata) ([]byte, error) {
 	mar, _ := json.Marshal(metadata)
 	stickerChunks, err := imageutil.ExtractChunksFromWebP(stickerByte)
@@ -136,7 +147,7 @@ func appendMetadataToSticker(stickerByte []byte, metadata WhatsAppStickerMetadat
 
 	exif, err := imageutil.BuildTIFF([]imageutil.IFD{
 		{NumberOfEntries: 1, Entries: []imageutil.DirectoryEntry{
-			{Tag: 0x4157, Type: imageutil.EntryTypeUndefined, Count: uint32(len(mar)), Value: mar},
+			{Tag: 0x5741, Type: imageutil.EntryTypeUndefined, Count: uint32(len(mar)), Value: mar},
 		}},
 	}, false)
 	if err != nil {
@@ -144,7 +155,7 @@ func appendMetadataToSticker(stickerByte []byte, metadata WhatsAppStickerMetadat
 	}
 
 	stickerChunks.SetChunk("EXIF", exif)
-	stickerChunks = imageutil.FixWebPExtendedChunks(stickerChunks)
+	fixSticker(&stickerChunks)
 	newStickerByte, err := imageutil.BuildWebPFromChunks(stickerChunks)
 	if err != nil {
 		return nil, err

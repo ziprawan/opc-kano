@@ -32,7 +32,7 @@ func ExtractChunksFromWebP(webpData []byte) (WebPChunk, error) {
 	// Take the payload from offest 8 and compare the length
 	riffPayload := webpData[8:]
 	riffPayloadSize := numbers.ByteToUint32LSB(webpData[4:8])
-	if riffPayloadSize != len(riffPayload) {
+	if int(riffPayloadSize) != len(riffPayload) {
 		return webpChunk, ErrInvalidRIFFLength
 	}
 
@@ -68,7 +68,7 @@ func ExtractChunksFromWebP(webpData []byte) (WebPChunk, error) {
 			return webpChunk, ErrInvalidChunkName
 		}
 		// The remaining bytes should be equal or more than the specified chunk size
-		if len(remainingBytes) < chunkSize {
+		if len(remainingBytes) < int(chunkSize) {
 			return webpChunk, ErrInvalidChunkLength
 		}
 

@@ -4,8 +4,8 @@ import (
 	"kano/internal/utils/numbers"
 )
 
-func processMSB(b []byte, useMSB bool) []byte {
-	if useMSB {
+func processMSB(b []byte, useLSB bool) []byte {
+	if useLSB {
 		c := make([]byte, len(b))
 		copy(c, b)
 		for i, j := 0, len(c)-1; i < j; i, j = i+1, j-1 {
@@ -17,17 +17,17 @@ func processMSB(b []byte, useMSB bool) []byte {
 	return b
 }
 
-func BuildTIFF(ifds []IFD, useMSB bool) ([]byte, error) {
+func BuildTIFF(ifds []IFD, useLSB bool) ([]byte, error) {
 	result := []byte{}
 
 	// TIFF Headers
-	if useMSB {
-		result = append(result, 0x4d, 0x4d)
+	if useLSB {
+		result = append(result, 0x49, 0x49) // II = "Intel"
 	} else {
-		result = append(result, 0x49, 0x49)
+		result = append(result, 0x4d, 0x4d) // MM = "Motorola"
 	}
-	result = append(result, processMSB([]byte{42, 0}, useMSB)...)      // The carefully chosen arbitrary number (42)
-	result = append(result, processMSB([]byte{8, 0, 0, 0}, useMSB)...) // In this case, IFD0 always start at offset 8
+	result = append(result, processMSB([]byte{0, 42}, useLSB)...)      // The carefully chosen arbitrary number (42)
+	result = append(result, processMSB([]byte{0, 0, 0, 8}, useLSB)...) // In this case, IFD0 always start at offset 8
 
 	if len(ifds) == 0 {
 		return nil, ErrNoIFDProvided
@@ -37,7 +37,7 @@ func BuildTIFF(ifds []IFD, useMSB bool) ([]byte, error) {
 	for ifdIdx, ifd := range ifds {
 		ifdStartOffset := len(result)
 
-		numberOfEntries := processMSB(numbers.Int16ToByteLSB(int(ifd.NumberOfEntries)), useMSB)
+		numberOfEntries := processMSB(numbers.Uint16ToByteMSB(uint(ifd.NumberOfEntries)), useLSB)
 		result = append(result, numberOfEntries...)
 
 		if int(ifd.NumberOfEntries) != len(ifd.Entries) {
@@ -51,9 +51,9 @@ func BuildTIFF(ifds []IFD, useMSB bool) ([]byte, error) {
 		for _, entry := range ifd.Entries {
 			entryByte := []byte{}
 
-			entryTag := processMSB(numbers.Int16ToByteLSB(int(entry.Tag)), useMSB)
-			entryType := processMSB(numbers.Int16ToByteLSB(int(entry.Type)), useMSB)
-			entryCount := processMSB(numbers.Int32ToByteLSB(int(entry.Count)), useMSB)
+			entryTag := processMSB(numbers.Uint16ToByteMSB(uint(entry.Tag)), useLSB)
+			entryType := processMSB(numbers.Uint16ToByteMSB(uint(entry.Type)), useLSB)
+			entryCount := processMSB(numbers.Uint32ToByteMSB(uint(entry.Count)), useLSB)
 			entryValue := entry.Value
 
 			entryTypeSize := ENTRY_TYPE_SIZE[entry.Type]
@@ -65,7 +65,7 @@ func BuildTIFF(ifds []IFD, useMSB bool) ([]byte, error) {
 			// I am going delusional, let's just keep it
 			// Somehow it works as intended
 			actualValue := []byte{}
-			if useMSB && entryTypeSize != 1 {
+			if useLSB && entryTypeSize != 1 {
 				mult := 1
 				if entryTypeSize == 8 {
 					mult = 2
@@ -87,7 +87,7 @@ func BuildTIFF(ifds []IFD, useMSB bool) ([]byte, error) {
 
 				offset := ifdEndOffset
 				ifdEndOffset += entrySize
-				entryValue = processMSB(numbers.Int32ToByteLSB(offset), useMSB)
+				entryValue = processMSB(numbers.Uint32ToByteMSB(uint(offset)), useLSB)
 
 			}
 
@@ -107,7 +107,7 @@ func BuildTIFF(ifds []IFD, useMSB bool) ([]byte, error) {
 
 		// Yeah, the next IFD
 		if ifdIdx != len(ifds)-1 {
-			result = append(result, numbers.Int32ToByteLSB(ifdEndOffset)...)
+			result = append(result, numbers.Uint32ToByteMSB(uint(ifdEndOffset))...)
 		} else {
 			result = append(result, []byte{0, 0, 0, 0}...)
 		}

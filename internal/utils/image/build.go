@@ -18,7 +18,7 @@ func generateChunk(name string, payload []byte) []byte {
 	}
 
 	resBytes := []byte(name)
-	resBytes = append(resBytes, numbers.Int32ToByteLSB(len(payload))...)
+	resBytes = append(resBytes, numbers.Uint32ToByteLSB(uint(len(payload)))...)
 	resBytes = append(resBytes, payload...)
 
 	if len(payload)%2 == 1 {
@@ -51,28 +51,28 @@ func BuildWebPFromChunks(chunks WebPChunk) ([]byte, error) {
 	riffPayload := []byte("WEBP")
 
 	if isExtended {
-		riffPayload = append(riffPayload, generateChunk("VP8X", chunks.vp8x)...)
+		riffPayload = append(riffPayload, generateChunk("VP8X", chunks.VP8X.toBytes())...)
 	}
 
 	// All chunks necessary for reconstruction and color correction, that is,
 	// 'VP8X', 'ICCP', 'ANIM', 'ANMF', 'ALPH', 'VP8 ', and 'VP8L', MUST appear in the order described earlier.
 	// Readers SHOULD fail when chunks necessary for reconstruction and color correction are out of order.
-	riffPayload = append(riffPayload, generateChunk("ICCP", chunks.iccp)...)
-	riffPayload = append(riffPayload, generateChunk("ANIM", chunks.anim)...)
-	for _, anmf := range chunks.anmf {
-		riffPayload = append(riffPayload, generateChunk("ANMF", anmf)...)
+	riffPayload = append(riffPayload, generateChunk("ICCP", chunks.ICCP)...)
+	riffPayload = append(riffPayload, generateChunk("ANIM", chunks.ANIM.toBytes())...)
+	for _, anmf := range chunks.ANMF {
+		riffPayload = append(riffPayload, generateChunk("ANMF", anmf.toBytes())...)
 	}
-	riffPayload = append(riffPayload, generateChunk("ALPH", chunks.alph)...)
-	riffPayload = append(riffPayload, generateChunk("VP8 ", chunks.vp8)...)
-	riffPayload = append(riffPayload, generateChunk("VP8L", chunks.vp8l)...)
+	riffPayload = append(riffPayload, generateChunk("ALPH", chunks.ALPH.toBytes())...)
+	riffPayload = append(riffPayload, generateChunk("VP8 ", chunks.VP8)...)
+	riffPayload = append(riffPayload, generateChunk("VP8L", chunks.VP8L)...)
 
-	riffPayload = append(riffPayload, generateChunk("XMP ", chunks.xmp)...)
-	riffPayload = append(riffPayload, generateChunk("EXIF", chunks.exif)...)
-	for _, extra := range chunks.extras {
-		riffPayload = append(riffPayload, generateChunk(extra.name, extra.payload)...)
+	riffPayload = append(riffPayload, generateChunk("XMP ", chunks.XMP)...)
+	riffPayload = append(riffPayload, generateChunk("EXIF", chunks.EXIF)...)
+	for _, extra := range chunks.Extras {
+		riffPayload = append(riffPayload, generateChunk(extra.Name, extra.Payload)...)
 	}
 
-	riffSizeByte := numbers.Int32ToByteLSB(len(riffPayload))
+	riffSizeByte := numbers.Uint32ToByteLSB(uint(len(riffPayload)))
 
 	webpBytes := []byte("RIFF")
 	webpBytes = append(webpBytes, riffSizeByte...)
