@@ -52,6 +52,10 @@ func Stk(c *messageutil.MessageContext) error {
 		isAnimated = true
 	} else if d := msg.GetDocumentMessage(); d != nil {
 		download = d
+		mime := d.GetMimetype()
+		if mime == "image/gif" || strings.HasPrefix(mime, "video/") {
+			isAnimated = true
+		}
 	} else if ptv := msg.GetPtvMessage(); ptv != nil {
 		download = ptv
 		isAnimated = true
