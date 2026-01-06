@@ -41,8 +41,7 @@ func FixRIFFHeader(riffBytes []byte) ([]byte, error) {
 func FixWebPExtendedChunks(chunks WebPChunk) WebPChunk {
 	vp8x := chunks.VP8X
 	if !chunks.Has("VP8X") {
-		// Image doesn't have VP8X data, skip
-		return chunks
+		vp8x = &VP8X{}
 	}
 
 	vp8x.HasICCProfile = chunks.Has("ICCP")
@@ -53,7 +52,7 @@ func FixWebPExtendedChunks(chunks WebPChunk) WebPChunk {
 
 	size := chunks.GetImageSize()
 	vp8x.Width = uint(size.Width)
-	vp8x.Width = uint(size.Height)
+	vp8x.Height = uint(size.Height)
 
 	chunks.VP8X = vp8x
 	return chunks

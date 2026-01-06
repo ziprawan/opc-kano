@@ -46,6 +46,9 @@ func BuildTIFF(ifds []IFD, useLSB bool) ([]byte, error) {
 
 		ifdEndOffset := ifdStartOffset + 2 + int(ifd.NumberOfEntries)*12 + 4 // Start + number of entries + entries size + offset next IFD
 		valueToAppend := []byte{}                                            // Any values that cannot fit in the entry value (4-byte) will be placed after the end of this IFD
+		if ifdIdx == len(ifds)-1 {
+			ifdEndOffset -= 4 // Apparently it is safe to remove the next IFD offset if it is the last IFD
+		}
 
 		// Process ifd's entries
 		for _, entry := range ifd.Entries {
@@ -108,8 +111,6 @@ func BuildTIFF(ifds []IFD, useLSB bool) ([]byte, error) {
 		// Yeah, the next IFD
 		if ifdIdx != len(ifds)-1 {
 			result = append(result, numbers.Uint32ToByteMSB(uint(ifdEndOffset))...)
-		} else {
-			result = append(result, []byte{0, 0, 0, 0}...)
 		}
 
 		if len(valueToAppend)%2 == 1 {
