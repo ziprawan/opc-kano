@@ -87,10 +87,22 @@ func Stk(c *messageutil.MessageContext) error {
 		return nil
 	}
 
+	packName := "Kano"
+	if name := c.Info.PushName; len(name) > 0 {
+		packName = name
+	}
+	if argnames, ok := c.Parser.NamedArgs["name"]; ok && len(argnames) > 0 {
+		packName = argnames[0].Content.Data
+	}
+
+	publisher := "Absolutely Kano"
+	if arg := c.Parser.GetAllOriginalArg(); len(arg) > 0 {
+		publisher = arg
+	}
 	createdSticker, err := sticker.MakeSticker(downloadedBytes, sticker.WhatsAppStickerMetadata{
 		StickerPackId:        "kano_sticker_packs",
-		StickerPackName:      "Kano",
-		StickerPackPublisher: "Absolutely Kano",
+		StickerPackName:      packName,
+		StickerPackPublisher: publisher,
 	}, isAnimated)
 	if err != nil {
 		c.QuoteReply("Failed to convert media into sticker. This is an internal error, try again later.\nDebug info: %s", err.Error())
