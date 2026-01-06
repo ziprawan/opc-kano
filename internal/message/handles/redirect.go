@@ -4,11 +4,10 @@ import (
 	"kano/internal/utils/messageutil"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 func Redirect(c *messageutil.MessageContext) error {
-	queryUrl := strings.TrimSpace(c.Parser.RawArg.Content)
+	queryUrl := c.Parser.RawArg.Content.Data
 
 	u, err := url.Parse(queryUrl)
 	if err != nil {

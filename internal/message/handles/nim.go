@@ -155,13 +155,13 @@ func Nim(c *messageutil.MessageContext) error {
 	}
 
 	for idx, arg := range c.Parser.Args {
-		if e := toUint(arg.Content); e != 0 {
+		if e := toUint(arg.Content.Data); e != 0 {
 			reset()
 
 			nim := nimQuery{}
-			nim.lower, nim.upper = findLowerUpperNim(arg.Content)
+			nim.lower, nim.upper = findLowerUpperNim(arg.Content.Data)
 			queries = append(queries, query{qtype: qnim, nim: nim})
-		} else if split := strings.Split(arg.Content, "-"); len(split) == 2 {
+		} else if split := strings.Split(arg.Content.Data, "-"); len(split) == 2 {
 			if toUint(split[0]) != 0 && toUint(split[1]) != 0 {
 				reset()
 
