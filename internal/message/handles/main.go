@@ -8,7 +8,6 @@ import (
 
 var ErrNotImplemented = errors.New("command not implemented")
 
-type MessageContext messageutil.MessageContext
 type CommandHandlerFunc func(ctx *messageutil.MessageContext) error
 
 type CommandHandler struct {
@@ -46,6 +45,12 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 	"six": CommandHandler{
 		Func: Six,
 	},
+	"ta": CommandHandler{
+		Func: Ta,
+	},
+	"test": CommandHandler{
+		Func: Test,
+	},
 	"redirect": CommandHandler{
 		Func:    Redirect,
 		Aliases: []string{"r", "getredir", "getloc"},
@@ -69,7 +74,7 @@ func init() {
 }
 
 func Handle(c *messageutil.MessageContext) error {
-	cmd := c.Parser.Command.Name
+	cmd := c.Parser.Command.Name.Data
 	c.Logger.Debugf("Got command: %s", cmd)
 
 	if len(mappedCommands) == 0 {
