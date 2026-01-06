@@ -149,7 +149,7 @@ func appendMetadataToSticker(stickerByte []byte, metadata WhatsAppStickerMetadat
 		{NumberOfEntries: 1, Entries: []imageutil.DirectoryEntry{
 			{Tag: 0x5741, Type: imageutil.EntryTypeUndefined, Count: uint32(len(mar)), Value: mar},
 		}},
-	}, false)
+	}, true)
 	if err != nil {
 		return nil, err
 	}
