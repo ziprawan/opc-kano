@@ -9,7 +9,6 @@ import (
 	"image/png"
 	"os"
 	"strconv"
-	"time"
 
 	imageutil "kano/internal/utils/image"
 
@@ -177,7 +176,6 @@ func MakeSticker(docBytes []byte, metadata WhatsAppStickerMetadata, isAnimated b
 	}
 
 	appended, err := appendMetadataToSticker(sticker, metadata)
-	os.WriteFile(fmt.Sprintf("%d.webp", time.Now().Unix()), appended, 0644)
 
 	return appended, err
 }
