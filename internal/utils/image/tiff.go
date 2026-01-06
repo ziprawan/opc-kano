@@ -51,7 +51,7 @@ func BuildTIFF(ifds []IFD, useLSB bool) ([]byte, error) {
 		}
 
 		// Process ifd's entries
-		for _, entry := range ifd.Entries {
+		for entryIdx, entry := range ifd.Entries {
 			entryByte := []byte{}
 
 			entryTag := processMSB(numbers.Uint16ToByteMSB(uint(entry.Tag)), useLSB)
@@ -83,7 +83,7 @@ func BuildTIFF(ifds []IFD, useLSB bool) ([]byte, error) {
 			}
 
 			if ENTRY_TYPE_SIZE[entry.Type]*int(entry.Count) > 4 {
-				if len(entryValue)%2 == 1 {
+				if len(entryValue)%2 == 1 && !(ifdIdx == len(ifds)-1 && entryIdx == len(ifd.Entries)-1) {
 					entryValue = append(entryValue, 0) // Keeping it on the word boundary
 				}
 				valueToAppend = append(valueToAppend, entryValue...)
@@ -111,10 +111,6 @@ func BuildTIFF(ifds []IFD, useLSB bool) ([]byte, error) {
 		// Yeah, the next IFD
 		if ifdIdx != len(ifds)-1 {
 			result = append(result, numbers.Uint32ToByteMSB(uint(ifdEndOffset))...)
-		}
-
-		if len(valueToAppend)%2 == 1 {
-			panic("PANIK! there is a data with odd length >:(")
 		}
 
 		if len(valueToAppend) > 0 {
