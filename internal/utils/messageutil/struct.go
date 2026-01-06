@@ -49,8 +49,14 @@ func CreateContext(cli *whatsmeow.Client, ev *events.Message) *MessageContext {
 		Info:       ev.Info,
 	}
 
+	var err error
 	parser := config.GetParser()
-	ctx.Parser = parser.Parse(ctx.GetText())
+	ctx.Parser, err = parser.Parse(ctx.GetText())
+	if err != nil {
+		ctx.Logger.Errorf("Failed to parse given text: %s", err)
+		ctx.QuoteReply("%s", err)
+		return nil
+	}
 
 	return &ctx
 }

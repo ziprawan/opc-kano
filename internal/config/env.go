@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string
-	OwnerJID    types.JID
-	PddiktiKey  []byte
-	PddiktiIv   []byte
+	DatabaseURL   string
+	OwnerJID      types.JID
+	PddiktiKey    []byte
+	PddiktiIv     []byte
+	OwnerOnlyMode bool
 }
 
 func InitConfig() *Config {
@@ -40,6 +41,10 @@ func InitConfig() *Config {
 				conf.PddiktiIv = ivByte
 			}
 		}
+	}
+
+	if _, err := getEnv("OWNER_ONLY"); err == nil {
+		conf.OwnerOnlyMode = true
 	}
 
 	return &conf

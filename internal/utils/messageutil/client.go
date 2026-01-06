@@ -72,3 +72,30 @@ func (c *MessageContext) ReplySticker(content []byte, quoted bool) (whatsmeow.Se
 		StickerMessage: stkMsg,
 	})
 }
+
+func (c *MessageContext) ReplyDocument(content []byte, quoted bool) (whatsmeow.SendResponse, error) {
+	resp, err := c.Client.Upload(content, whatsmeow.MediaDocument)
+	if err != nil {
+		return whatsmeow.SendResponse{}, err
+	}
+
+	now := time.Now().Unix()
+	docMsg := &waE2E.DocumentMessage{
+		Mimetype:          proto.String("plain/text"),
+		URL:               proto.String(resp.URL),
+		DirectPath:        proto.String(resp.DirectPath),
+		MediaKey:          resp.MediaKey,
+		FileEncSHA256:     resp.FileEncSHA256,
+		FileSHA256:        resp.FileSHA256,
+		FileLength:        proto.Uint64(resp.FileLength),
+		MediaKeyTimestamp: proto.Int64(now),
+	}
+
+	if quoted {
+		docMsg.ContextInfo = c.BuildReplyContextInfo()
+	}
+
+	return c.SendMessage(&waE2E.Message{
+		DocumentMessage: docMsg,
+	})
+}
