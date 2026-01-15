@@ -56,11 +56,11 @@ type ParseResult struct {
 	// Tagged  []string
 }
 
-type state uint8
+type argtype uint8
 
 const (
 	// Nothing
-	_ state = iota // 000
+	_ argtype = iota // 000
 	// "Normal" argument. Support spaces if it started with quote right after a space.
 	normal // 001
 	// Named argument, where "key" is located at the left side of equals sign.

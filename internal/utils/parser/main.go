@@ -83,16 +83,12 @@ func (p *ParseResult) parseArgs() (err error) {
 		return
 	}
 
-	// State is 3 bit data (00000xxy),
-	// where the rightmost bit (y) is indicating if it should record space or nah.
-	// The remaining bits (xx) are indicating the state (as defined with type "state")
-	var curstate uint8 = (uint8(normal) << 1)
+	var curstate state = default_state
 	// Used to check the closer of the quote
 	var endquote uint8 = 0
 	// Used to store temporary key name for value to insert
-	var curnamed string = ""
+	var curnamed key = ""
 
-	skipSpace := false
 	args := []Argument{}
 	namedArgs := NamedArgument{}
 	argstart := 0
@@ -114,6 +110,9 @@ func (p *ParseResult) parseArgs() (err error) {
 	argstart = i
 	var r rune
 	for i, r = range p.Text {
+		// fmt.Printf("idx=%d, char=%s, skipSpace=%d, argType=%d, recordSpace=%d, argstart=%d, endquote=%s, curnamed=%s\n",
+		// 	i, string(r), curstate.doSkipAllSpace(), curstate.getArgtype(), curstate.doRecordSpace(),
+		// 	argstart, string(endquote), curnamed)
 		if i < argstart {
 			continue
 		}
@@ -123,7 +122,7 @@ func (p *ParseResult) parseArgs() (err error) {
 			return
 		}
 		// Skip spaces in between arguments
-		if skipSpace {
+		if curstate.doSkipAllSpace() == 1 {
 			if r > 255 && unicode.IsSpace(r) {
 				continue
 			}
@@ -131,7 +130,7 @@ func (p *ParseResult) parseArgs() (err error) {
 				continue
 			}
 
-			skipSpace = false
+			curstate.changeSkipSpace(0)
 			argstart = i
 		}
 
@@ -143,37 +142,18 @@ func (p *ParseResult) parseArgs() (err error) {
 				// Yea, ts not ASCII dawg, it is also outside of my special table
 				continue
 			}
+		} else {
+			b = uint8(r)
 		}
-
-		b = uint8(r)
-		recordSpace := curstate & 0b001
-		argtype := state(curstate&0b110) >> 1
 
 		switch specialCase[b] {
 		case space:
-			if recordSpace == 1 { // ignore it, let the space included in the argument
+			if curstate.doRecordSpace() == 1 { // ignore it, let the space included in the argument
 				continue
 			}
 		case quote:
-			if recordSpace == 0 {
-				if argstart != i {
-					// There is an argument right before the quote and there is not space between them
-					arg := Argument{
-						Position:    Position{Start: argstart, End: i - 1},
-						Content:     Content{Data: p.Text[argstart:i], Position: Position{Start: argstart, End: i - 1}},
-						InsideQuote: false, UsedQuote: 0, // I assume it is guaranteed not an inside quote argument
-					}
-					switch argtype {
-					case normal:
-						args = append(args, arg)
-					case namedValue:
-						namedArgs[curnamed] = append(namedArgs[curnamed], arg)
-						curstate = (uint8(normal) << 1) | recordSpace
-						curnamed = ""
-					}
-				}
-
-				curstate |= 0b001
+			if curstate.doRecordSpace() == 0 {
+				curstate.changeRecordSpace(1)
 				endquote = b
 				argstart = i + 1
 				continue
@@ -181,19 +161,21 @@ func (p *ParseResult) parseArgs() (err error) {
 				continue
 			} // The remaining case should be recordSpace == 1 && b == endquote
 		case equal:
-			if argtype == normal {
-				if recordSpace == 0 {
-					argtype = namedKey
+			switch curstate.getArgtype() {
+			case normal:
+				if curstate.doRecordSpace() == 0 {
+					curstate.changeArgtype(namedKey)
 				} else {
 					continue
 				}
-			} else if argtype == namedKey {
+			case namedKey:
 				err = fmt.Errorf("internal error: equal: invalid argtype namedKey")
 				return
-			} else if argtype == namedValue {
+			case namedValue:
 				continue
-			} else {
-				err = fmt.Errorf("internal error: equal: out of range argtype: %d", argtype)
+			default:
+				err = fmt.Errorf("internal error: equal: out of range argtype: %d", curstate.getArgtype())
+				return
 			}
 		default:
 			continue
@@ -202,78 +184,87 @@ func (p *ParseResult) parseArgs() (err error) {
 		// I assume everything works as intended
 		// And now just taking the string and make the argument object
 		content := p.Text[argstart:i]
+		recordSpace := curstate.doRecordSpace()
+		arg := Argument{
+			Position:    Position{Start: argstart - int(recordSpace), End: i - 1 + int(recordSpace)},
+			Content:     Content{Data: content, Position: Position{Start: argstart, End: i - 1}},
+			InsideQuote: recordSpace == 1,
+			UsedQuote:   rune(endquote),
+		}
+		if len(content) == 0 {
+			arg.Position.End += 1 - int(recordSpace)
+			arg.Content.Position.Start = 0
+			arg.Content.Position.End = 0
+		}
 
-		switch argtype {
+		switch curstate.getArgtype() {
 		case normal:
-			args = append(args, Argument{
-				Position:    Position{Start: argstart - int(recordSpace), End: i - 1 + int(recordSpace)},
-				Content:     Content{Data: content, Position: Position{Start: argstart, End: i - 1}},
-				InsideQuote: recordSpace == 1,
-				UsedQuote:   rune(endquote),
-			})
-			argtype = normal
+			args = append(args, arg)
+			curstate.changeArgtype(normal)
+			curstate.changeSkipSpace(1)
 		case namedKey:
+			if len(args) > 0 {
+				err = fmt.Errorf("named argument is not allowed when normal argument is already given")
+				return
+			}
+
 			_, ok := namedArgs[content]
 			if !ok {
-				namedArgs[content] = []Argument{}
-			}
-
-			if i+1 < len(p.Text) && specialCase[p.Text[i+1]] == space {
-				argtype = normal
-				curnamed = ""
+				namedArgs[content] = []Argument{{}}
 			} else {
-				argtype = namedValue
-				curnamed = content
+				namedArgs[content] = append(namedArgs[content], Argument{})
 			}
 
+			curstate.changeArgtype(namedValue)
+			curnamed.set(content)
+			argstart = i + 1
 		case namedValue:
-			namedArgs[curnamed] = append(namedArgs[curnamed], Argument{
-				Position:    Position{Start: argstart - int(recordSpace), End: i - 1 + int(recordSpace)},
-				Content:     Content{Data: content, Position: Position{Start: argstart, End: i - 1}},
-				InsideQuote: recordSpace == 1,
-				UsedQuote:   rune(endquote),
-			})
+			arg.Position.Start -= curnamed.len() + 1
+			if len(content) == 0 {
+				arg.Position.End -= 1
+			}
 
-			argtype = normal
+			idx := len(namedArgs[curnamed.val()]) - 1
+			namedArgs[curnamed.val()][idx] = arg
+
+			curstate.changeArgtype(normal)
+			curstate.changeSkipSpace(1)
 			curnamed = ""
 		}
 
+		curstate.changeRecordSpace(0)
 		endquote = 0
-		curstate = (uint8(argtype) << 1)
-		skipSpace = true
 	}
 
 	// There is unrecorded argument in the EOF
-	argtype := state(curstate&0b110) >> 1
-	recordSpace := curstate & 0b001
+	argtype := curstate.getArgtype()
+	recordSpace := curstate.doRecordSpace()
 
 	if recordSpace == 1 {
 		// It recording space, but it is already EOF
 		// I assume the input has unclosed quote
-		err = fmt.Errorf("unclosed quote detected, perhaps you forgot %c?", endquote)
+		err = fmt.Errorf("unclosed quote detected, perhaps you forgot (%c)?", endquote)
 		return
 	}
 
 	if argstart < len(p.Text) && specialCase[p.Text[len(p.Text)-1]] != quote {
 		content := p.Text[argstart:]
 		i := len(p.Text)
+		arg := Argument{
+			Position:    Position{Start: argstart, End: i - 1},
+			Content:     Content{Data: content, Position: Position{Start: argstart, End: i - 1}},
+			InsideQuote: false, UsedQuote: 0,
+		}
 
 		switch argtype {
 		case normal:
-			args = append(args, Argument{
-				Position:    Position{Start: argstart, End: i - 1},
-				Content:     Content{Data: content, Position: Position{Start: argstart, End: i - 1}},
-				InsideQuote: false, UsedQuote: 0,
-			})
+			args = append(args, arg)
 		case namedKey:
 			err = fmt.Errorf("invalid argtype namedKey at EOF")
 			return
 		case namedValue:
-			namedArgs[curnamed] = append(namedArgs[curnamed], Argument{
-				Position:    Position{Start: argstart, End: i - 1},
-				Content:     Content{Data: content, Position: Position{Start: argstart, End: i - 1}},
-				InsideQuote: false, UsedQuote: 0,
-			})
+			idx := len(namedArgs[curnamed.val()]) - 1
+			namedArgs[curnamed.val()][idx] = arg
 		}
 	}
 
@@ -293,78 +284,4 @@ func (p Parser) Parse(text string) (res ParseResult, err error) {
 	}
 
 	return
-}
-
-// Get argument content start and end position index
-//
-// It remain the same even if a.InsideQuote is true
-func (a Argument) GetPosition() (int, int) {
-	return a.Start, a.End
-}
-
-// Get absolute argument position (start and end index)
-//
-// The index counted from the quote if it exists
-func (a Argument) GetAbsolutePosition() (int, int) {
-	if a.InsideQuote {
-		return a.Start - 1, a.End + 1
-	}
-
-	return a.Start, a.End
-}
-
-// Return n-th until m-th argument and join them using single space.
-// This function might ignore the quote character
-func (r ParseResult) GetJoinedArg(n, m int) string {
-	if n >= len(r.Args) {
-		return ""
-	}
-	if m >= len(r.Args) {
-		m = len(r.Args) - 1
-	}
-	if m < n {
-		m = n
-	}
-
-	allArgsStr := []string{}
-	for i := n; i <= m; i++ {
-		allArgsStr = append(allArgsStr, r.Args[i].Content.Data)
-	}
-
-	return strings.Join(allArgsStr, " ")
-}
-
-func (r ParseResult) GetAllJoinedArg() string {
-	return r.GetJoinedArg(0, len(r.Args)-1)
-}
-
-// Return n-th until m-th argument and join them using original space
-func (r ParseResult) GetOriginalArg(n, m int) string {
-	if n >= len(r.Args) {
-		return ""
-	}
-	if m >= len(r.Args) {
-		m = len(r.Args) - 1
-	}
-	if m < n {
-		m = n
-	}
-
-	first := r.Args[n]
-	last := r.Args[m]
-	firstIdx := first.Start
-	lastIdx := last.End
-
-	if first.InsideQuote {
-		firstIdx--
-	}
-	if last.InsideQuote {
-		lastIdx++
-	}
-
-	return r.Text[firstIdx : lastIdx+1]
-}
-
-func (r ParseResult) GetAllOriginalArg() string {
-	return r.GetOriginalArg(0, len(r.Args)-1)
 }

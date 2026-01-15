@@ -352,7 +352,7 @@ var tests []ArgTest = []ArgTest{
 		},
 		NamedArgs: parser.NamedArgument{
 			"filter": []parser.Argument{{
-				Position: parser.Position{Start: 13, End: 18},
+				Position: parser.Position{Start: 6, End: 18},
 				Content: parser.Content{
 					Data:     "normal",
 					Position: parser.Position{Start: 13, End: 18},
@@ -361,7 +361,7 @@ var tests []ArgTest = []ArgTest{
 			}},
 			"other": []parser.Argument{
 				{
-					Position: parser.Position{Start: 26, End: 39},
+					Position: parser.Position{Start: 20, End: 39},
 					Content: parser.Content{
 						Data:     "spaced value",
 						Position: parser.Position{Start: 27, End: 38},
@@ -369,7 +369,7 @@ var tests []ArgTest = []ArgTest{
 					InsideQuote: true, UsedQuote: '\'',
 				},
 				{
-					Position: parser.Position{Start: 47, End: 51},
+					Position: parser.Position{Start: 41, End: 51},
 					Content: parser.Content{
 						Data:     "other",
 						Position: parser.Position{Start: 47, End: 51},
@@ -377,11 +377,47 @@ var tests []ArgTest = []ArgTest{
 					InsideQuote: false, UsedQuote: 0,
 				},
 			},
-			"empty": []parser.Argument{},
+			"empty": []parser.Argument{{
+				Position: parser.Position{Start: 53, End: 58},
+				Content: parser.Content{
+					Data:     "",
+					Position: parser.Position{Start: 0, End: 0},
+				},
+				InsideQuote: false, UsedQuote: 0,
+			}},
 		},
 	}},
 
+	{Name: "empty_quoted_arg", Input: ".test \"\"", Expected: parser.ParseResult{
+		Text: ".test \"\"",
+		Command: parser.Command{
+			Name:       parser.Content{Data: "test", Position: parser.Position{Start: 1, End: 4}},
+			UsedPrefix: ".",
+			Raw:        parser.Content{Data: ".test", Position: parser.Position{Start: 0, End: 4}},
+		},
+		RawArg: parser.Argument{
+			Content: parser.Content{
+				Data:     "\"\"",
+				Position: parser.Position{Start: 6, End: 7},
+			},
+			Position:    parser.Position{Start: 6, End: 7},
+			InsideQuote: false, UsedQuote: 0,
+		},
+		Args: []parser.Argument{
+			{
+				Content: parser.Content{
+					Data:     "",
+					Position: parser.Position{Start: 0, End: 0},
+				},
+				Position:    parser.Position{Start: 6, End: 7},
+				InsideQuote: true, UsedQuote: 34,
+			},
+		},
+		NamedArgs: parser.NamedArgument{},
+	}},
+
 	{Name: "error_no_quote_close", Input: ".test 'hehe", ShouldError: true},
+	{Name: "named_after_normal_arg", Input: ".test hehe named=", ShouldError: true},
 }
 
 func TestParseResult(t *testing.T) {
@@ -393,12 +429,23 @@ func TestParseResult(t *testing.T) {
 			parseResult, err := theParser.Parse(test.Input)
 			if test.ShouldError {
 				if err == nil {
-					t.Errorf("this should produce error")
+					t.Errorf("this should throw error")
+					t.SkipNow()
+				} else {
+					t.Skip()
 				}
-			} else {
-				if err := checkParseResult(parseResult, test.Expected); err != nil {
-					t.Errorf("%s", err.Error())
+			}
+			if !test.ShouldError {
+				if err != nil {
+					t.Errorf("this should not throw error: %s", err.Error())
+					t.SkipNow()
+				} else {
+					t.Skip()
 				}
+			}
+
+			if err := checkParseResult(parseResult, test.Expected); err != nil {
+				t.Errorf("%s", err.Error())
 			}
 		})
 	}
