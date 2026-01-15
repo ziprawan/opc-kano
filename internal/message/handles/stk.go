@@ -96,7 +96,7 @@ func Stk(c *messageutil.MessageContext) error {
 	}
 
 	publisher := "Absolutely Kano"
-	if arg := c.Parser.GetAllOriginalArg(); len(arg) > 0 {
+	if arg := c.Parser.GetAllOriginalArg(); len(c.Parser.Args) > 0 {
 		publisher = arg
 	}
 	createdSticker, err := sticker.MakeSticker(downloadedBytes, sticker.WhatsAppStickerMetadata{
