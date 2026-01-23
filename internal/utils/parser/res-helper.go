@@ -44,19 +44,19 @@ func (r ParseResult) GetOriginalArg(n, m int) string {
 
 	var res strings.Builder
 	for i := n; i <= m; i++ {
-		res.WriteString(r.Args[n].Content.Data)
-		endIdx := r.Args[n].Position.End
+		res.WriteString(r.Args[i].Content.Data)
+		endIdx := r.Args[i].Position.End
 
 		if endIdx == len(r.Text)-1 {
 			continue
 		}
 
-		for j, rn := range r.Text[endIdx:] {
+		for j, rn := range r.Text[endIdx+1:] {
 			if unicode.IsSpace(rn) {
 				continue
 			}
 
-			res.WriteString(r.Text[endIdx:j])
+			res.WriteString(r.Text[endIdx+1 : endIdx+1+j])
 			break
 		}
 	}
