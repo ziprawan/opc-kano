@@ -16,3 +16,7 @@ func CreateContext(cli *whatsmeow.Client) *ClientContext {
 		Store:  cli.Store,
 	}
 }
+
+func (c *ClientContext) GetClient() *whatsmeow.Client {
+	return c.client
+}

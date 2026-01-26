@@ -23,3 +23,15 @@ func (c *ClientContext) Download(msg whatsmeow.DownloadableMessage) ([]byte, err
 func (c *ClientContext) Upload(content []byte, mediaType whatsmeow.MediaType) (whatsmeow.UploadResponse, error) {
 	return c.client.Upload(context.Background(), content, mediaType)
 }
+
+func (c *ClientContext) GetGroupInfo(jid types.JID) (*types.GroupInfo, error) {
+	return c.client.GetGroupInfo(context.Background(), jid)
+}
+
+func (c *ClientContext) GetSubGroups(community types.JID) ([]*types.GroupLinkTarget, error) {
+	return c.client.GetSubGroups(context.Background(), community)
+}
+
+func (c *ClientContext) GetJoinedGroups() ([]*types.GroupInfo, error) {
+	return c.client.GetJoinedGroups(context.Background())
+}
