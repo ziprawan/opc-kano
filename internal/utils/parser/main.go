@@ -208,15 +208,10 @@ func (p *ParseResult) parseArgs() (err error) {
 				return
 			}
 
-			_, ok := namedArgs[content]
-			if !ok {
-				namedArgs[content] = []Argument{{}}
-			} else {
-				namedArgs[content] = append(namedArgs[content], Argument{})
-			}
+			curnamed.set(content)
+			namedArgs[curnamed.val()] = append(namedArgs[curnamed.val()], Argument{})
 
 			curstate.changeArgtype(namedValue)
-			curnamed.set(content)
 			argstart = i + 1
 		case namedValue:
 			arg.Position.Start -= curnamed.len() + 1
