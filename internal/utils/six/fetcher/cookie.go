@@ -24,6 +24,10 @@ func ReadCookie() Cookie {
 	return curCookie
 }
 
+func ResetCookie() {
+	curCookie = ""
+}
+
 func (c *Cookie) Get() string {
 	if c == nil {
 		return ""

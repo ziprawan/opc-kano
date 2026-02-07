@@ -4,6 +4,7 @@ import (
 	"kano/internal/config"
 	"kano/internal/cronjobs"
 	"kano/internal/utils/messageutil"
+	"kano/internal/utils/six/fetcher"
 	"os"
 	"path"
 )
@@ -20,6 +21,7 @@ func updateHandler(c *messageutil.MessageContext) error {
 		os.WriteFile(path.Join("secrets", "khongguan"), []byte(kh), 0644)
 	}
 
+	fetcher.ResetCookie()
 	cronjobs.SixUpdateSchedules(c.Client.GetClient())()
 	return nil
 }
