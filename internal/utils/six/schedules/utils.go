@@ -3,7 +3,6 @@ package schedules
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"kano/internal/utils/six/fetcher"
 	"os"
 	"path"
@@ -72,7 +71,7 @@ func schedQuery(semsCtx, prodiId string) (*goquery.Selection, error) {
 			return nil, err
 		}
 
-		err = os.MkdirAll(fPath, fs.ModeDir)
+		err = os.MkdirAll(fPath, 0777)
 		if err != nil {
 			return nil, err
 		}
