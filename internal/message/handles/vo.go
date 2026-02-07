@@ -8,7 +8,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func Vo(c *messageutil.MessageContext) (err error) {
+func Vo(c *messageutil.MessageContext) error {
+	c.QuoteReply("Not implemented yet. Wait for future update.")
+	return ErrNotImplemented
+}
+
+func NVo(c *messageutil.MessageContext) (err error) {
 	repliedMsg := c.GetRepliedMessage()
 	if repliedMsg == nil {
 		_, err = c.QuoteReply("Please reply to a view-once message.")

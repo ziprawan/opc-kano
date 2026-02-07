@@ -75,9 +75,16 @@ func searchStudents(queries []query) ([]models.Student, error) {
 			}
 
 			var noSpecificNims []models.Student
-			res := db.Where("name % ?", name).Clauses(clause.OrderBy{
-				Expression: clause.Expr{SQL: "SIMILARITY(name, ?) DESC", Vars: []any{name}},
-			}).Find(&noSpecificNims)
+			res := db.
+				Where("name % ?", name).
+				Or("custom_name % ?", name).
+				Clauses(clause.OrderBy{
+					Expression: clause.Expr{SQL: "SIMILARITY(custom_name, ?) DESC", Vars: []any{name}},
+				}).
+				Clauses(clause.OrderBy{
+					Expression: clause.Expr{SQL: "SIMILARITY(name, ?) DESC", Vars: []any{name}},
+				}).
+				Find(&noSpecificNims)
 			if err := res.Error; err != nil {
 				return nil, err
 			}

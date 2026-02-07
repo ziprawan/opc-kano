@@ -55,6 +55,19 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 		Func:    Redirect,
 		Aliases: []string{"r", "getredir", "getloc"},
 	},
+	"resolve-subject": CommandHandler{
+		Func:    ResolveSubject,
+		Aliases: []string{"rs"},
+	},
+
+	// "jadwal": CommandHandler{
+	// 	Func:    Jadwal,
+	// 	Aliases: []string{"j"},
+	// },
+	// "matkul": CommandHandler{
+	// 	Func:    Matkul,
+	// 	Aliases: []string{"m"},
+	// },
 }
 
 var mappedCommands map[string]CommandHandler = map[string]CommandHandler{}

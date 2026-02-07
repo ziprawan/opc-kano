@@ -3,6 +3,7 @@ package config
 import (
 	"kano/internal/logger"
 	"kano/internal/utils/parser"
+	"time"
 )
 
 const logLevel = logger.LogLevelDebug
@@ -10,6 +11,7 @@ const logLevel = logger.LogLevelDebug
 var log *logger.Logger
 var parserObj *parser.Parser
 var configObj *Config
+var Jakarta *time.Location
 
 func Init() {
 	if log == nil {
@@ -20,6 +22,12 @@ func Init() {
 	}
 	if configObj == nil {
 		configObj = InitConfig()
+	}
+
+	var err error
+	Jakarta, err = time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		panic(err)
 	}
 }
 

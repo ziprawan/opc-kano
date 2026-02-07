@@ -15,7 +15,7 @@ type ArgTest struct {
 
 func isContentSame(a, b parser.Content) error {
 	if a.Data != b.Data {
-		return fmt.Errorf("expected content data \"%s\", got \"%s\"", b.Data, a.Data)
+		return fmt.Errorf("expected content data %q, got %q", b.Data, a.Data)
 	}
 	if a.Start != b.Start {
 		return fmt.Errorf("expected content start pos %d, got %d", b.Start, a.Start)
@@ -62,7 +62,7 @@ func isCommandSame(a, b parser.Command) error {
 
 func checkParseResult(outResult, expectedParse parser.ParseResult) error {
 	if outResult.Text != expectedParse.Text {
-		return fmt.Errorf("expected text is \"%s\", got \"%s\"", expectedParse.Text, outResult.Text)
+		return fmt.Errorf("expected text is %q, got %q", expectedParse.Text, outResult.Text)
 	}
 
 	if err := isCommandSame(outResult.Command, expectedParse.Command); err != nil {

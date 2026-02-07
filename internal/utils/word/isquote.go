@@ -56,3 +56,11 @@ func IsTwinQuote(char, other rune) bool {
 	}
 	return slices.Contains(closer, other)
 }
+
+func IsCharUpper(char byte) bool {
+	return char >= 'A' && char <= 'Z'
+}
+
+func IsCharNumber(char byte) bool {
+	return char >= '0' && char <= '9'
+}
