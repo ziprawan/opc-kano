@@ -116,9 +116,9 @@ func afterBefore(offset int) string {
 
 func anchor(anchorAtEnd bool) string {
 	if anchorAtEnd {
-		return "dimulai"
-	} else {
 		return "berakhir"
+	} else {
+		return "dimulai"
 	}
 }
 
