@@ -15,6 +15,20 @@ func helpHandler(c *messageutil.MessageContext) error {
 		return nil
 	}
 
+	args := c.Parser.Args
+	if len(args) > 1 {
+		first := args[0].Content.Data
+		second := args[1].Content.Data
+
+		if first == "help" {
+			theFunc, ok := helpMap[second]
+			if ok {
+				theFunc(c)
+				return nil
+			}
+		}
+	}
+
 	theCmd := fmt.Sprintf("%s%s", c.Parser.Command.UsedPrefix, c.Parser.Command.Name.Data)
 
 	var msg strings.Builder
@@ -30,7 +44,7 @@ func helpHandler(c *messageutil.MessageContext) error {
 	fmt.Fprintf(&msg, "\tIkuti perubahan kelas (kuota, dosen, jadwal, hingga ruangan).\n")
 	fmt.Fprintf(&msg, "\n")
 	fmt.Fprintf(&msg, "\t`help`\n")
-	fmt.Fprintf(&msg, "\tMenampilkan pesan bantuan ini.\n")
+	fmt.Fprintf(&msg, "\tMenampilkan pesan bantuan ini. Gunakan %s help [command] untuk pesan bantuan per perintah.\n", theCmd)
 	fmt.Fprintf(&msg, "\n")
 	fmt.Fprintf(&msg, "\t`update` (Hanya pemilik bot)\n")
 	fmt.Fprintf(&msg, "\tJadwal SIX biasa diperbarui setiap jam, tepat di menit 00. Dalam keadaan tertentu, perintah ini dapat digunakan untuk memaksa perbarui jadwal.\n")

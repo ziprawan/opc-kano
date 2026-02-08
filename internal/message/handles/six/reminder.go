@@ -1,13 +1,18 @@
 package six
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"kano/internal/database/models"
 	"kano/internal/utils/messageutil"
+	"math"
+	"strings"
+	"time"
 
 	"go.mau.fi/whatsmeow/types"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const OFFSET_MAX = 10080
@@ -25,8 +30,7 @@ func reminderHandler(c *messageutil.MessageContext) error {
 
 	args := c.Parser.Args
 	if len(args) == 1 {
-		reminderHelp(c)
-		return nil
+		return reminderList(c)
 	}
 
 	classCtx := args[1].Content.Data
@@ -101,6 +105,82 @@ func reminderHandler(c *messageutil.MessageContext) error {
 		c.QuoteReply("Berhasil menambahkan pengingat %q.", ctx)
 	}
 
+	return nil
+}
+
+func reminderList(c *messageutil.MessageContext) error {
+	jid := c.GetChat()
+	found, err := gorm.G[models.ClassReminder](db).
+		Joins(clause.InnerJoin.Association("SubjectClass.Subject"), models.NoopJoin).
+		Where("jid = ?", jid).
+		Order("subject_class_id").
+		Order("offset_minutes").
+		Find(context.Background())
+	if err != nil {
+		c.QuoteReply("Gagal mengambil data reminder, harap laporkan ke pemilik bot.\nInformasi tambahan: `%s`", err)
+		return err
+	}
+
+	theCmd := fmt.Sprintf("%s%s", c.Parser.Command.UsedPrefix, c.Parser.Command.Name.Data)
+	if len(found) == 0 {
+		c.QuoteReply("Tidak ada reminder yang diatur. Lihat `%s help reminder` untuk informasi lebih lanjut.", theCmd)
+		return nil
+	}
+
+	builders := map[uint]*strings.Builder{}
+	for _, f := range found {
+		id := f.SubjectClassID
+		if _, ok := builders[id]; !ok {
+			builders[id] = &strings.Builder{}
+			fmt.Fprintf(builders[id], "%s-%02d (%s):", f.SubjectClass.Subject.Code, f.SubjectClass.Number, f.SubjectClass.Subject.Name)
+		} else {
+			fmt.Fprintf(builders[id], "\n- ")
+		}
+
+		dur := time.Duration(f.OffsetMinutes) * time.Minute
+		kapan := ""
+		if dur < 0 {
+			kapan = "sebelum"
+		} else {
+			kapan = "setelah"
+		}
+		ref := ""
+		if f.AnchorAtEnd {
+			ref = "berakhir"
+		} else {
+			ref = "dimulai"
+		}
+
+		dur = dur.Abs()
+		hari := int(math.Floor(dur.Hours() / 24))
+		jam := int(math.Floor(dur.Hours())) % 24
+		menit := int(math.Floor(dur.Minutes())) % 60
+
+		if hari > 0 {
+			fmt.Fprintf(builders[id], "%d hari ", hari)
+		}
+		if jam > 0 {
+			fmt.Fprintf(builders[id], "%d jam ", jam)
+		}
+		if menit > 0 {
+			fmt.Fprintf(builders[id], "%d menit ", menit)
+		}
+
+		fmt.Fprintf(builders[id], "%s kelas %s",
+			kapan,
+			ref,
+		)
+	}
+
+	var msg strings.Builder
+	for _, builder := range builders {
+		fmt.Fprintln(&msg, "Daftar reminder:")
+		fmt.Fprintln(&msg, "")
+		fmt.Fprintf(&msg, "%s", builder.String())
+		fmt.Fprintln(&msg, "")
+	}
+
+	c.QuoteReply("%s", msg.String())
 	return nil
 }
 

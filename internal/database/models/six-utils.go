@@ -9,7 +9,7 @@ type ClassReminder struct {
 	AnchorAtEnd    bool      `gorm:"not null;default:false;uniqueIndex:classReminder_jid_subjectClassId_offset_unique"`
 	OffsetMinutes  int       `gorm:"not null;default:0;uniqueIndex:classReminder_jid_subjectClassId_offset_unique"`
 
-	Subject Subject `gorm:"foreignKey:SubjectClassID;references:ID"`
+	SubjectClass *SubjectClass `gorm:"foreignKey:SubjectClassID;references:ID"`
 }
 
 func (_ ClassReminder) TableName() string {

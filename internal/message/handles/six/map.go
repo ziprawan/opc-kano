@@ -16,3 +16,8 @@ var CommandMap = map[string]func(*messageutil.MessageContext) error{
 	"reminder": reminderHandler,
 	"r":        reminderHandler,
 }
+
+var helpMap = map[string]func(*messageutil.MessageContext){
+	"r":        reminderHelp,
+	"reminder": reminderHelp,
+}
