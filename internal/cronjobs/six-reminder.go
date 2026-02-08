@@ -34,9 +34,9 @@ func SixReminder(cli *whatsmeow.Client) func() {
 		db := database.GetInstance()
 
 		res, err := gorm.G[models.ClassReminderView](db).
-			Joins(clause.LeftJoin.Association("Delivery"), func(db gorm.JoinBuilder, joinTable, curTable clause.Table) error { return nil }).
-			Joins(clause.LeftJoin.Association("Schedule"), func(db gorm.JoinBuilder, joinTable, curTable clause.Table) error { return nil }).
-			Joins(clause.InnerJoin.Association("SubjectClass.Subject"), func(db gorm.JoinBuilder, joinTable, curTable clause.Table) error { return nil }).
+			Joins(clause.LeftJoin.Association("Delivery"), models.NoopJoin).
+			Joins(clause.LeftJoin.Association("Schedule"), models.NoopJoin).
+			Joins(clause.InnerJoin.Association("SubjectClass.Subject"), models.NoopJoin).
 			Where(
 				// Limit at start of day until current time only
 				"alert_time_unix >= ? AND alert_time_unix <= ? AND \"Delivery\".schedule_id IS NULL",
