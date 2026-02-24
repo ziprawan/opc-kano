@@ -1,22 +1,64 @@
 package handles
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"kano/internal/database"
+	"kano/internal/database/models"
 	"kano/internal/utils/messageutil"
+	"kano/internal/utils/word"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"google.golang.org/protobuf/proto"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-func Vo(c *messageutil.MessageContext) error {
-	c.QuoteReply("Not implemented yet. Wait for future update.")
-	return ErrNotImplemented
+type downloadableMessageWithURL interface {
+	whatsmeow.DownloadableMessage
+	GetURL() string
 }
 
-func NVo(c *messageutil.MessageContext) (err error) {
-	repliedMsg := c.GetRepliedMessage()
+func Vo(c *messageutil.MessageContext) (err error) {
+	db := database.GetInstance()
+	msgId, senderJid, repliedMsg := c.GetRepliedMessage()
 	if repliedMsg == nil {
 		_, err = c.QuoteReply("Please reply to a view-once message.")
+		return
+	}
+
+	repliedToThemself := c.IsSenderSame(senderJid)
+	fmt.Println(repliedToThemself, c.GetSender(), senderJid)
+
+	// Check if the sender is replied to themself
+	found := models.VoRequest{ChatJid: c.GetChat(), MessageId: msgId}
+	tx := db.Where(&found).First(&found)
+	if tx.Error != nil {
+		if !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			err = tx.Error
+			c.QuoteReply("Failed to query to vo_request table: %s", tx.Error)
+			return
+		}
+	} else {
+		msg := fmt.Sprintf("View-once message is already requested by @%s", found.RequesterJid)
+		if found.Accepted.Valid {
+			if found.Accepted.Bool {
+				msg += " and already accepted by the sender"
+			} else {
+				msg += " and already denied by the sender"
+			}
+		}
+
+		ctxInfo := c.BuildReplyContextInfo()
+		ctxInfo.MentionedJID = []string{found.RequesterJid.String()}
+		_, err = c.SendMessage(&waE2E.Message{
+			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+				Text:        &msg,
+				ContextInfo: ctxInfo,
+			},
+		})
 		return
 	}
 
@@ -29,21 +71,26 @@ func NVo(c *messageutil.MessageContext) (err error) {
 		repliedMsg = vo2ext
 	}
 
-	msg := &waE2E.Message{}
+	// A message object to send if the requested vo is the sender itself
+	selfMsg := &waE2E.Message{}
+	var mediaType whatsmeow.MediaType
 	var downloadable whatsmeow.DownloadableMessage
 
 	if i := repliedMsg.GetImageMessage(); i != nil && i.GetViewOnce() {
 		i.ViewOnce = proto.Bool(false)
 		downloadable = i
-		msg.ImageMessage = i
+		selfMsg.ImageMessage = i
+		mediaType = whatsmeow.MediaImage
 	} else if v := repliedMsg.GetVideoMessage(); v != nil && v.GetViewOnce() {
 		v.ViewOnce = proto.Bool(false)
 		downloadable = v
-		msg.VideoMessage = v
+		selfMsg.VideoMessage = v
+		mediaType = whatsmeow.MediaVideo
 	} else if a := repliedMsg.GetAudioMessage(); a != nil && a.GetViewOnce() {
 		a.ViewOnce = proto.Bool(false)
 		downloadable = a
-		msg.AudioMessage = a
+		selfMsg.AudioMessage = a
+		mediaType = whatsmeow.MediaAudio
 	}
 
 	if downloadable == nil {
@@ -56,6 +103,66 @@ func NVo(c *messageutil.MessageContext) (err error) {
 		return
 	}
 
-	_, err = c.Client.SendMessage(c.GetChat(), msg)
+	insert := models.VoRequest{
+		ChatJid:   c.GetChat(),
+		MessageId: msgId,
+
+		RequesterJid:    c.GetNonADSender(),
+		MessageOwnerJid: senderJid,
+		// ApprovalMessageId is assigned after sending the approval message
+
+		// Url and DirectPath is assigned below by a condition
+		MediaKey:      word.ToBase64(string(downloadable.GetMediaKey())),
+		FileSha256:    word.ToBase64(string(downloadable.GetFileSHA256())),
+		FileEncSha256: word.ToBase64(string(downloadable.GetFileEncSHA256())),
+		MediaType:     string(mediaType),
+	}
+
+	if dp := downloadable.GetDirectPath(); len(dp) > 0 {
+		insert.DirectPath = sql.NullString{
+			String: dp,
+			Valid:  true,
+		}
+	}
+	if u, ok := downloadable.(downloadableMessageWithURL); ok && len(u.GetURL()) > 0 {
+		insert.Url = sql.NullString{
+			String: u.GetURL(),
+			Valid:  true,
+		}
+	}
+
+	if repliedToThemself {
+		sent, err := c.SendMessage(selfMsg)
+		if err != nil {
+			return err
+		} else {
+			insert.ApprovalMessageId = sent.ID
+			insert.Accepted = sql.NullBool{Bool: true, Valid: true}
+		}
+	} else {
+		textMsg := fmt.Sprintf("Waiting for approval from @%s (react with ✅ to approve, ❌ or just leave it alone to reject)", senderJid)
+		ctxInfo := c.BuildReplyContextInfo()
+		ctxInfo.MentionedJID = []string{senderJid.String()}
+		sent, err := c.SendMessage(&waE2E.Message{
+			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+				Text:        &textMsg,
+				ContextInfo: ctxInfo,
+			},
+		})
+
+		if err != nil {
+			return err
+		} else {
+			insert.ApprovalMessageId = sent.ID
+		}
+	}
+
+	tx = db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&insert)
+	if tx.Error != nil {
+		err = tx.Error
+		c.Reply(fmt.Sprintf("Failed to save into vo_request table: %s", tx.Error), false)
+		return
+	}
+
 	return
 }

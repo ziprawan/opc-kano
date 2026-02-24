@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"kano/internal/config"
 	"kano/internal/message/handles"
+	"kano/internal/message/reaction"
 	"kano/internal/utils/messageutil"
 
 	"go.mau.fi/whatsmeow"
@@ -24,6 +25,10 @@ func Main(cli *whatsmeow.Client, evt *events.Message) error {
 
 	if msgCtx.GetText() != "" {
 		return handles.Handle(msgCtx)
+	}
+
+	if msgCtx.Message.GetReactionMessage() != nil {
+		return reaction.Main(msgCtx)
 	}
 
 	return nil

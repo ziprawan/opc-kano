@@ -132,7 +132,7 @@ func reminderList(c *messageutil.MessageContext) error {
 		id := f.SubjectClassID
 		if _, ok := builders[id]; !ok {
 			builders[id] = &strings.Builder{}
-			fmt.Fprintf(builders[id], "%s-%02d (%s):", f.SubjectClass.Subject.Code, f.SubjectClass.Number, f.SubjectClass.Subject.Name)
+			fmt.Fprintf(builders[id], "%s-%02d (%s):\n- ", f.SubjectClass.Subject.Code, f.SubjectClass.Number, f.SubjectClass.Subject.Name)
 		} else {
 			fmt.Fprintf(builders[id], "\n- ")
 		}
@@ -141,8 +141,10 @@ func reminderList(c *messageutil.MessageContext) error {
 		kapan := ""
 		if dur < 0 {
 			kapan = "sebelum"
-		} else {
+		} else if dur > 0 {
 			kapan = "setelah"
+		} else {
+			kapan = "tepat saat"
 		}
 		ref := ""
 		if f.AnchorAtEnd {
@@ -173,9 +175,9 @@ func reminderList(c *messageutil.MessageContext) error {
 	}
 
 	var msg strings.Builder
+	fmt.Fprintln(&msg, "Daftar reminder:")
+	fmt.Fprintln(&msg, "")
 	for _, builder := range builders {
-		fmt.Fprintln(&msg, "Daftar reminder:")
-		fmt.Fprintln(&msg, "")
 		fmt.Fprintf(&msg, "%s", builder.String())
 		fmt.Fprintln(&msg, "")
 	}

@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
+	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -155,7 +156,7 @@ func (c *MessageContext) GetCleanMessage() (content *waE2E.Message) {
 	return
 }
 
-func (c *MessageContext) GetRepliedMessage() *waE2E.Message {
+func (c *MessageContext) GetRepliedMessage() (types.MessageID, types.JID, *waE2E.Message) {
 	msgReflect := c.RawMessage.ProtoReflect()
 	msgDescriptor := msgReflect.Descriptor()
 	msgFields := msgDescriptor.Fields()
@@ -190,9 +191,16 @@ func (c *MessageContext) GetRepliedMessage() *waE2E.Message {
 		// Extract the contextInfo
 		msg, ok := subMsg.Get(subDesc).Message().Interface().(*waE2E.ContextInfo)
 		if ok {
-			return msg.GetQuotedMessage()
+			senderJid, _ := types.ParseJID(msg.GetParticipant())
+			if senderJid.Server == types.DefaultUserServer {
+				theLid, err := c.Client.GetLIDForPN(senderJid)
+				if err == nil {
+					senderJid = theLid
+				}
+			}
+			return msg.GetStanzaID(), senderJid, msg.GetQuotedMessage()
 		}
 	}
 
-	return nil
+	return "", types.JID{}, nil
 }

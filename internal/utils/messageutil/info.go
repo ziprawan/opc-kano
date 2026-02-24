@@ -1,6 +1,7 @@
 package messageutil
 
 import (
+	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/types"
 )
 
@@ -64,6 +65,22 @@ func (c *MessageContext) GetNonADSenderAlt() types.JID {
 
 func (c *MessageContext) GetAddressingMode() types.AddressingMode {
 	return c.Info.AddressingMode
+}
+
+func (c *MessageContext) IsReactedToMe() bool {
+	return c.GetReactionKey().GetFromMe()
+}
+
+func (c *MessageContext) GetReactedMsgId() types.MessageID {
+	return c.GetReactionKey().GetID()
+}
+
+func (c *MessageContext) GetReactionKey() *waCommon.MessageKey {
+	return c.Message.GetReactionMessage().GetKey()
+}
+
+func (c *MessageContext) GetReaction() string {
+	return c.Message.GetReactionMessage().GetText()
 }
 
 func (c *MessageContext) GetChat(leaveAsIs ...bool) types.JID {
