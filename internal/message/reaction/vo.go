@@ -70,11 +70,14 @@ func downloadMediaFromVoRequest(c *messageutil.MessageContext, req models.VoRequ
 }
 
 func VoReactApproval(c *messageutil.MessageContext) error {
+	c.Logger.Debugf("Entered VoReactApproval function")
+
 	reactContent := c.GetReaction()
 	reactKey := c.GetReactionKey()
 
 	isReactedToMe := reactKey.GetFromMe()
 	if !isReactedToMe {
+		c.Logger.Infof("Reacted message is not to me")
 		return nil
 	}
 
@@ -84,6 +87,7 @@ func VoReactApproval(c *messageutil.MessageContext) error {
 	isDisapproved := slices.Contains(DISAPPROVAL_EMOJIS, reactContent)
 
 	if !isApproved && !isDisapproved {
+		c.Logger.Infof("No supported emojis")
 		return nil
 	}
 
@@ -92,14 +96,21 @@ func VoReactApproval(c *messageutil.MessageContext) error {
 	tx := db.Where(&req).First(&req)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			c.Logger.Infof("No record found")
 			return nil
 		}
 
+		c.Logger.Errorf("%s", tx.Error)
 		return tx.Error
 	}
 
+	if !c.IsSenderSame(req.MessageOwnerJid) {
+		c.Logger.Debugf("The reaction sender is not same as the vo message owner")
+		return nil
+	}
+
 	ctxInfo := &waE2E.ContextInfo{
-		StanzaID:    proto.String(req.ApprovalMessageId),
+		StanzaID:    proto.String(reactKey.GetID()),
 		Participant: proto.String(reactKey.GetParticipant()),
 		QuotedMessage: &waE2E.Message{
 			Conversation: proto.String("Reply placeholder. If you are seeing this, maybe your app is broken for some reason."),
@@ -109,11 +120,13 @@ func VoReactApproval(c *messageutil.MessageContext) error {
 	if isApproved {
 		mediaBytes, err := downloadMediaFromVoRequest(c, req)
 		if err != nil {
+			c.Logger.Errorf("Failed to download: %s", tx.Error)
 			return err
 		}
 
 		resp, err := c.Client.Upload(mediaBytes, whatsmeow.MediaImage)
 		if err != nil {
+			c.Logger.Errorf("Failed to upload: %s", tx.Error)
 			return err
 		}
 
