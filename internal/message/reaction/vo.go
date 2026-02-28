@@ -14,6 +14,7 @@ import (
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
+	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
 )
@@ -75,8 +76,8 @@ func VoReactApproval(c *messageutil.MessageContext) error {
 	reactContent := c.GetReaction()
 	reactKey := c.GetReactionKey()
 
-	isReactedToMe := reactKey.GetFromMe()
-	if !isReactedToMe {
+	reactedMsgJid, _ := types.ParseJID(reactKey.GetParticipant())
+	if c.IsMe(reactedMsgJid) {
 		c.Logger.Infof("Reacted message is not to me")
 		return nil
 	}

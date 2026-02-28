@@ -46,3 +46,18 @@ func (c MessageContext) SendMessage(message *waE2E.Message) (whatsmeow.SendRespo
 	}
 	return c.Client.SendMessage(chat, message)
 }
+
+func (c MessageContext) IsMe(jid types.JID) bool {
+	if jid.Server != types.HiddenUserServer && jid.Server != types.DefaultUserServer {
+		return false
+	}
+
+	if jid.Server == types.DefaultUserServer {
+		lid, err := c.Client.GetLIDForPN(jid)
+		if err == nil {
+			jid = lid
+		}
+	}
+
+	return c.Client.GetJID() == jid
+}

@@ -17,3 +17,7 @@ func (c *ClientContext) GetPNForLID(lid types.JID) (types.JID, error) {
 func (c *ClientContext) GetManyLIDsForPNs(pns []types.JID) (map[types.JID]types.JID, error) {
 	return c.Store.LIDs.GetManyLIDsForPNs(context.Background(), pns)
 }
+
+func (c *ClientContext) GetJID() types.JID {
+	return c.Store.GetJID()
+}
