@@ -76,8 +76,13 @@ func VoReactApproval(c *messageutil.MessageContext) error {
 	reactContent := c.GetReaction()
 	reactKey := c.GetReactionKey()
 
-	reactedMsgJid, _ := types.ParseJID(reactKey.GetParticipant())
-	if c.IsMe(reactedMsgJid) {
+	part := reactKey.GetParticipant()
+	if part == "" {
+		part = reactKey.GetRemoteJID()
+	}
+
+	reactedMsgJid, _ := types.ParseJID(part)
+	if !c.IsMe(reactedMsgJid) {
 		c.Logger.Infof("Reacted message is not to me")
 		return nil
 	}
@@ -112,7 +117,7 @@ func VoReactApproval(c *messageutil.MessageContext) error {
 
 	ctxInfo := &waE2E.ContextInfo{
 		StanzaID:    proto.String(reactKey.GetID()),
-		Participant: proto.String(reactKey.GetParticipant()),
+		Participant: proto.String(part),
 		QuotedMessage: &waE2E.Message{
 			Conversation: proto.String("Reply placeholder. If you are seeing this, maybe your app is broken for some reason."),
 		},
