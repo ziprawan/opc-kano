@@ -61,6 +61,10 @@ func IsCharUpper(char byte) bool {
 	return char >= 'A' && char <= 'Z'
 }
 
+func IsCharLower(char byte) bool {
+	return char >= 'a' && char <= 'z'
+}
+
 func IsCharNumber(char byte) bool {
 	return char >= '0' && char <= '9'
 }
