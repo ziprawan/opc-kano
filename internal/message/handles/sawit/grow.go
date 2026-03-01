@@ -47,7 +47,7 @@ func Grow(c *messageutil.MessageContext) error {
 
 	now := time.Now().UTC()
 	nowDateStr := now.Format("02-01-2006")
-	tomorrow := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	tomorrow := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, time.UTC)
 	diff := tomorrow.Sub(now).Abs()
 	hour := int(math.Floor(diff.Hours())) % 24
 	minute := int(math.Floor(diff.Minutes())) % 60
