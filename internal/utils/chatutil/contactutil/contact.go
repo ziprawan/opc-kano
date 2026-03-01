@@ -13,15 +13,32 @@ import (
 
 var log = config.GetLogger().Sub("ContactUtil")
 
-func Init() (*models.Contact, error) {
-	return nil, nil
+type Contact struct {
+	ID         uint
+	JID        types.JID
+	Pushname   string
+	CustomName string
+}
+
+func Init(jid types.JID, pushname string) (Contact, error) {
+	contact := Contact{}
+	model, err := initDb(jid, pushname)
+	if err != nil {
+		return contact, err
+	}
+
+	contact.ID = model.ID
+	contact.JID = model.JID
+	contact.Pushname = model.PushName
+	contact.CustomName = model.CustomName
+
+	return contact, nil
 }
 
 func GetIDs(jids []types.JID) (map[types.JID]uint, error) {
 	if len(jids) == 0 {
 		return map[types.JID]uint{}, nil
 	}
-	fmt.Println("JIDS", jids)
 
 	db := database.GetInstance()
 	var exists []models.Contact
