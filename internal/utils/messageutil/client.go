@@ -99,3 +99,34 @@ func (c *MessageContext) ReplyDocument(content []byte, quoted bool) (whatsmeow.S
 		DocumentMessage: docMsg,
 	})
 }
+
+func (c *MessageContext) ReplyImage(content []byte, quoted bool, caption string) (whatsmeow.SendResponse, error) {
+	resp, err := c.Client.Upload(content, whatsmeow.MediaImage)
+	if err != nil {
+		return whatsmeow.SendResponse{}, err
+	}
+
+	now := time.Now().Unix()
+	imgMsg := &waE2E.ImageMessage{
+		Mimetype:          proto.String("image/jpeg"),
+		URL:               proto.String(resp.URL),
+		DirectPath:        proto.String(resp.DirectPath),
+		MediaKey:          resp.MediaKey,
+		FileEncSHA256:     resp.FileEncSHA256,
+		FileSHA256:        resp.FileSHA256,
+		FileLength:        proto.Uint64(resp.FileLength),
+		MediaKeyTimestamp: proto.Int64(now),
+	}
+
+	if quoted {
+		imgMsg.ContextInfo = c.BuildReplyContextInfo()
+	}
+
+	if caption != "" {
+		imgMsg.Caption = &caption
+	}
+
+	return c.SendMessage(&waE2E.Message{
+		ImageMessage: imgMsg,
+	})
+}
