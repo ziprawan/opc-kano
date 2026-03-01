@@ -7,7 +7,7 @@ import (
 	"math/rand"
 )
 
-func randomSelectWordle() (models.Wordle, error) {
+func RandomSelectWordle() (models.Wordle, error) {
 	db := database.GetInstance()
 	var ids []uint
 	tx := db.Model(&models.Wordle{}).Select("id").Find(&ids)
@@ -18,7 +18,7 @@ func randomSelectWordle() (models.Wordle, error) {
 	selectedIdx := rand.Intn(len(ids))
 	selectedWordleId := ids[selectedIdx]
 
-	wordle := models.Wordle{Id: selectedWordleId}
+	wordle := models.Wordle{ID: selectedWordleId}
 	tx = db.First(&wordle)
 	if err := tx.Error; err != nil {
 		return wordle, fmt.Errorf("randomizer: Failed to get word by id: %s", err)

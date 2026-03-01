@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func isWordExists(word string) bool {
+func IsWordExists(word string) bool {
 	db := database.GetInstance()
 
 	found := models.Wordle{}

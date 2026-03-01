@@ -13,7 +13,7 @@ import (
 	"golang.org/x/image/font"
 )
 
-func generateWordleImage(target string, guesses []string) ([]byte, error) {
+func GenerateWordleImage(target string, guesses []string) ([]byte, error) {
 	theFont, err := getFont()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get font: %s", err)
@@ -46,26 +46,6 @@ func generateWordleImage(target string, guesses []string) ([]byte, error) {
 	sLen := 300                     // Square length
 	gap := 40                       // gap between the squares
 
-	// Draw the square border
-	for range 6 - len(guesses) {
-		for range 5 {
-			// Top
-			draw.Draw(img, image.Rect(curPos.X-off, curPos.Y-off, curPos.X+sLen+off, curPos.Y+off), &BORDER_UNIFORM, image.Point{}, draw.Src)
-			// Bottom
-			draw.Draw(img, image.Rect(curPos.X-off, curPos.Y+sLen-off, curPos.X+sLen+off, curPos.Y+sLen+off), &BORDER_UNIFORM, image.Point{}, draw.Src)
-			// Left
-			draw.Draw(img, image.Rect(curPos.X-off, curPos.Y-off, curPos.X+off, curPos.Y+sLen+off), &BORDER_UNIFORM, image.Point{}, draw.Src)
-			// Right
-			draw.Draw(img, image.Rect(curPos.X+sLen-off, curPos.Y-off, curPos.X+sLen+off, curPos.Y+sLen+off), &BORDER_UNIFORM, image.Point{}, draw.Src)
-
-			// Shift the x coordinate to the right
-			curPos.X += sLen + gap
-		}
-
-		curPos.Y += sLen + gap
-		curPos.X = 150
-	}
-
 	for _, guess := range guesses {
 		tiles, ok := generateTiles(target, guess)
 		if !ok {
@@ -90,6 +70,26 @@ func generateWordleImage(target string, guesses []string) ([]byte, error) {
 
 		// Shift the y coordinate to the below
 		// and reset the x coordinate to the left
+		curPos.Y += sLen + gap
+		curPos.X = 150
+	}
+
+	// Draw the empty square border
+	for range 6 - len(guesses) {
+		for range 5 {
+			// Top
+			draw.Draw(img, image.Rect(curPos.X-off, curPos.Y-off, curPos.X+sLen+off, curPos.Y+off), &BORDER_UNIFORM, image.Point{}, draw.Src)
+			// Bottom
+			draw.Draw(img, image.Rect(curPos.X-off, curPos.Y+sLen-off, curPos.X+sLen+off, curPos.Y+sLen+off), &BORDER_UNIFORM, image.Point{}, draw.Src)
+			// Left
+			draw.Draw(img, image.Rect(curPos.X-off, curPos.Y-off, curPos.X+off, curPos.Y+sLen+off), &BORDER_UNIFORM, image.Point{}, draw.Src)
+			// Right
+			draw.Draw(img, image.Rect(curPos.X+sLen-off, curPos.Y-off, curPos.X+sLen+off, curPos.Y+sLen+off), &BORDER_UNIFORM, image.Point{}, draw.Src)
+
+			// Shift the x coordinate to the right
+			curPos.X += sLen + gap
+		}
+
 		curPos.Y += sLen + gap
 		curPos.X = 150
 	}
