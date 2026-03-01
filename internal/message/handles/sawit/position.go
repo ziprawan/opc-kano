@@ -10,7 +10,7 @@ func GetParticipantPosition(groupId, participantId uint) (uint, error) {
 	tx := db.
 		Joins("JOIN participant ON participant.id = sawit.participant_id").
 		Where("participant.group_id = ?", groupId).
-		Order("height DESC, updated_at ASC").
+		Order("sawit.height DESC, sawit.updated_at ASC").
 		Select("participant_id", "height").
 		Find(&founds)
 	if tx.Error != nil {
