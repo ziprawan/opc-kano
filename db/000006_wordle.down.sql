@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS "user_wordle";
+DROP TABLE IF EXISTS "wordle";

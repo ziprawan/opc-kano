@@ -3,10 +3,8 @@ package handles
 import (
 	"errors"
 	"kano/internal/config"
+	"kano/internal/database"
 	"kano/internal/utils/messageutil"
-
-	"go.mau.fi/whatsmeow/proto/waE2E"
-	"google.golang.org/protobuf/proto"
 )
 
 var ErrNotImplemented = errors.New("command not implemented")
@@ -62,23 +60,8 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 		Func:    ResolveSubject,
 		Aliases: []string{"rs"},
 	},
-	"bs": CommandHandler{
-		Func: func(ctx *messageutil.MessageContext) error {
-			ctx.SendMessage(&waE2E.Message{
-				ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-					Text: proto.String("Bullshit"),
-					ContextInfo: &waE2E.ContextInfo{
-						StanzaID:    proto.String(ctx.GetID()),
-						Participant: proto.String(ctx.GetSender().String()),
-						QuotedMessage: &waE2E.Message{
-							Conversation: proto.String("Bullshit"),
-						},
-					},
-				},
-			})
-
-			return nil
-		},
+	"wordle": CommandHandler{
+		Func: WordleHandler,
 	},
 
 	// "jadwal": CommandHandler{
@@ -92,6 +75,7 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 }
 
 var mappedCommands map[string]CommandHandler = map[string]CommandHandler{}
+var db = database.GetInstance()
 
 func init() {
 	log := config.GetLogger()
