@@ -2,6 +2,7 @@ package messageutil
 
 import (
 	"fmt"
+	"kano/internal/utils/image"
 	"time"
 
 	"go.mau.fi/whatsmeow"
@@ -116,6 +117,11 @@ func (c *MessageContext) ReplyImage(content []byte, quoted bool, caption string)
 		FileSHA256:        resp.FileSHA256,
 		FileLength:        proto.Uint64(resp.FileLength),
 		MediaKeyTimestamp: proto.Int64(now),
+	}
+
+	thumb, err := image.GenerateThumbnail(content)
+	if err == nil {
+		imgMsg.JPEGThumbnail = thumb
 	}
 
 	if quoted {
