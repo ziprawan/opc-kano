@@ -107,7 +107,7 @@ func Vo(c *messageutil.MessageContext) (err error) {
 		ChatJid:   c.GetChat(),
 		MessageId: msgId,
 
-		RequesterJid:    c.GetNonADSender(),
+		RequesterJid:    c.GetSender(),
 		MessageOwnerJid: senderJid,
 		// ApprovalMessageId is assigned after sending the approval message
 

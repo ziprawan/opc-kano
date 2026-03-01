@@ -111,7 +111,7 @@ func conversations(l *logger.Logger, cli *whatsmeow.Client, convs []*waHistorySy
 			continue
 		}
 
-		grp, err := grouputil.Init(cli, jid)
+		grp, err := grouputil.InitDb(cli, jid)
 		if err != nil {
 			l.Errorf("Failed to init group: %s", err.Error())
 			return err

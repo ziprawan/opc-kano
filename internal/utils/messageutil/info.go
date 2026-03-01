@@ -10,6 +10,10 @@ func (c *MessageContext) GetID() types.MessageID {
 }
 
 func (c *MessageContext) GetSender() types.JID {
+	return c.GetADSender().ToNonAD()
+}
+
+func (c *MessageContext) GetADSender() types.JID {
 	if c.cache.sender != nil {
 		return *c.cache.sender
 	}
@@ -32,11 +36,11 @@ func (c *MessageContext) GetSender() types.JID {
 	return sender
 }
 
-func (c *MessageContext) GetNonADSender() types.JID {
-	return c.GetSender().ToNonAD()
+func (c *MessageContext) GetSenderAlt() types.JID {
+	return c.GetADSenderAlt().ToNonAD()
 }
 
-func (c *MessageContext) GetSenderAlt() types.JID {
+func (c *MessageContext) GetADSenderAlt() types.JID {
 	if c.cache.senderAlt != nil {
 		return *c.cache.senderAlt
 	}
@@ -57,10 +61,6 @@ func (c *MessageContext) GetSenderAlt() types.JID {
 
 	c.cache.senderAlt = &senderAlt
 	return senderAlt
-}
-
-func (c *MessageContext) GetNonADSenderAlt() types.JID {
-	return c.GetSenderAlt().ToNonAD()
 }
 
 func (c *MessageContext) GetAddressingMode() types.AddressingMode {

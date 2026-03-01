@@ -4,6 +4,7 @@ import (
 	"kano/internal/config"
 	"kano/internal/logger"
 	"kano/internal/utils/chatutil/contactutil"
+	"kano/internal/utils/chatutil/grouputil"
 	"kano/internal/utils/client"
 	"kano/internal/utils/parser"
 
@@ -30,6 +31,8 @@ type MessageContext struct {
 	Logger *logger.Logger
 	// Contact (database) info
 	Contact contactutil.Contact
+	// Group info
+	Group grouputil.Group
 
 	// Shorthand of Event.Message
 	Message *waE2E.Message
@@ -71,6 +74,17 @@ func CreateContext(cli *whatsmeow.Client, ev *events.Message) *MessageContext {
 			return nil
 		}
 		ctx.Contact = contact
+	}
+
+	chat := ctx.GetChat()
+	if chat.Server == types.GroupServer {
+		group, err := grouputil.Init(cli, chat)
+		if err != nil {
+			ctx.Logger.Errorf("Failed to init group object: %s", err)
+			// return nil
+		} else {
+			ctx.Group = group
+		}
 	}
 
 	return &ctx

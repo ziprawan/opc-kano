@@ -15,7 +15,7 @@ func Test(ctx *messageutil.MessageContext) error {
 	}
 
 	jid, _ := types.ParseJID("120363320329260818@g.us")
-	info, err := grouputil.Init(ctx.Client.GetClient(), jid)
+	info, err := grouputil.InitDb(ctx.Client.GetClient(), jid)
 	if err != nil {
 		ctx.QuoteReply("Failed to init group: %s", err)
 		return err

@@ -13,7 +13,7 @@ func Ta(ctx *messageutil.MessageContext) error {
 			Text: proto.String("@all"),
 			ContextInfo: &waE2E.ContextInfo{
 				StanzaID:       proto.String(ctx.GetID()),
-				Participant:    proto.String(ctx.GetNonADSender().String()),
+				Participant:    proto.String(ctx.GetSender().String()),
 				QuotedMessage:  ctx.GetCleanMessage(),
 				NonJIDMentions: proto.Uint32(1),
 			},

@@ -19,7 +19,19 @@ import (
 var caches = map[string]*models.Group{}
 var log = config.GetLogger().Sub("GroupUtil")
 
-func Init(cli *whatsmeow.Client, groupJid types.JID) (*models.Group, error) {
+type Group struct {
+	models.Group
+}
+
+func Init(cli *whatsmeow.Client, groupJid types.JID) (Group, error) {
+	group, err := InitDb(cli, groupJid)
+	if group != nil {
+		return Group{Group: *group}, nil
+	}
+	return Group{}, err
+}
+
+func InitDb(cli *whatsmeow.Client, groupJid types.JID) (*models.Group, error) {
 	if c, o := caches[groupJid.String()]; o && c != nil {
 		log.Debugf("Found group data at cache with name %s", c.Name)
 		return c, nil

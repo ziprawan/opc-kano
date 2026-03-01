@@ -11,7 +11,7 @@ import (
 )
 
 func (c *MessageContext) BuildReplyContextInfo() *waE2E.ContextInfo {
-	sender := c.GetNonADSender().String()
+	sender := c.GetSender().String()
 	content := c.GetCleanMessage()
 
 	return &waE2E.ContextInfo{

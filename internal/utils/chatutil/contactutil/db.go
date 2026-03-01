@@ -18,7 +18,7 @@ func initDb(jid types.JID, pushname string) (*models.Contact, error) {
 	contact := models.Contact{}
 	tx := db.
 		Where(models.Contact{JID: jid}).
-		Attrs(models.Contact{JID: jid, PushName: pushname}).
+		Assign(models.Contact{PushName: pushname}).
 		FirstOrCreate(&contact)
 
 	return &contact, tx.Error

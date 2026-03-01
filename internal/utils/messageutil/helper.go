@@ -31,7 +31,7 @@ func (c MessageContext) ValidateDownloadableMessage(m whatsmeow.DownloadableMess
 
 func (c MessageContext) IsSenderSame(compareJid types.JID) bool {
 	nonAD := compareJid.ToNonAD().String()
-	return c.GetNonADSender().String() == nonAD || c.GetNonADSenderAlt().String() == nonAD
+	return c.GetSender().String() == nonAD || c.GetSenderAlt().String() == nonAD
 }
 
 func (c MessageContext) SendMessage(message *waE2E.Message) (whatsmeow.SendResponse, error) {
