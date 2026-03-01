@@ -61,7 +61,8 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 		Aliases: []string{"rs"},
 	},
 	"wordle": CommandHandler{
-		Func: WordleHandler,
+		Func:    WordleHandler,
+		Aliases: []string{"worlde", "w"},
 	},
 
 	// "jadwal": CommandHandler{
