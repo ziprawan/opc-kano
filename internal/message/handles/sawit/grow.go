@@ -1,15 +1,12 @@
 package sawit
 
 import (
-	"errors"
 	"kano/internal/database"
 	"kano/internal/database/models"
 	"kano/internal/utils/messageutil"
 	"math"
 	"math/rand"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 const GROW_PROB = 0.9
@@ -17,31 +14,10 @@ const GROW_PROB = 0.9
 var db = database.GetInstance()
 
 func Grow(c *messageutil.MessageContext) error {
-	participant, err := c.Group.GetParticipantByContactId(c.Contact.ID)
+	partId, err := c.GetParticipantID()
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			grpInfo, err := c.Client.GetGroupInfo(c.GetChat())
-			if err != nil {
-				c.QuoteReply("Failed to get group participants: %s", err)
-				return err
-			}
-			err = c.Group.UpdateParticipantList(grpInfo)
-			if err != nil {
-				c.QuoteReply("Failed to update group participants: %s", err)
-				return err
-			}
-
-			participant, err = c.Group.GetParticipantByContactId(c.Contact.ID)
-			if err != nil {
-				c.QuoteReply("Failed to get participant info: %s", err)
-				return err
-			}
-		} else {
-			c.QuoteReply("Failed to get participant info: %s", err)
-			return err
-		}
+		return err
 	}
-	partId := participant.ID
 
 	r := rand.New(rand.NewSource(time.Now().UnixMilli()))
 

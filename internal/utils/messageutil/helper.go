@@ -2,10 +2,12 @@ package messageutil
 
 import (
 	"errors"
+	"fmt"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"gorm.io/gorm"
 )
 
 var (
@@ -60,4 +62,28 @@ func (c MessageContext) IsMe(jid types.JID) bool {
 	}
 
 	return c.Client.GetJID() == jid
+}
+
+func (c MessageContext) GetParticipantID() (uint, error) {
+	participant, err := c.Group.GetParticipantByContactId(c.Contact.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			grpInfo, err := c.Client.GetGroupInfo(c.GetChat())
+			if err != nil {
+				return 0, fmt.Errorf("Failed to get group participants: %s", err)
+			}
+			err = c.Group.UpdateParticipantList(grpInfo)
+			if err != nil {
+				return 0, fmt.Errorf("Failed to update group participants: %s", err)
+			}
+
+			participant, err = c.Group.GetParticipantByContactId(c.Contact.ID)
+			if err != nil {
+				return 0, fmt.Errorf("Failed to get participant info: %s", err)
+			}
+		} else {
+			return 0, fmt.Errorf("Failed to get participant info: %s", err)
+		}
+	}
+	return participant.ID, nil
 }
