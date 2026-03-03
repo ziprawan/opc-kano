@@ -23,7 +23,7 @@ func Stat(c *messageutil.MessageContext) error {
 
 	c.QuoteReply(
 		"Height: *%d*\nPosition in the top: *%d*\n\nWin rate: *%.02f%%*\nAttacks: *%d*\nWins: *%d*\nAcquired height: *%d cm*\nLost height: *%d cm*",
-		partSawit.Height, position, partSawit.GetWinrate(), partSawit.AttackTotal, partSawit.AttackWin, partSawit.AttackAcquiredHeight, partSawit.AttackLostHeight,
+		partSawit.Height, position, partSawit.GetWinrate()*100, partSawit.AttackTotal, partSawit.AttackWin, partSawit.AttackAcquiredHeight, partSawit.AttackLostHeight,
 	)
 
 	return nil
