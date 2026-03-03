@@ -23,6 +23,8 @@ func SawitHandler(c *messageutil.MessageContext) error {
 		return sawit.Grow(c)
 	case "leaderboard", "lb", "l":
 		return sawit.Leaderboard(c)
+	case "stat", "sta", "st", "s":
+		return sawit.Stat(c)
 	default:
 		theNum, err := strconv.ParseUint(cmd, 10, 0)
 		if err != nil {
@@ -32,6 +34,4 @@ func SawitHandler(c *messageutil.MessageContext) error {
 			return sawit.Attack(c, uint(theNum))
 		}
 	}
-
-	return nil
 }
