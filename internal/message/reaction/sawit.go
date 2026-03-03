@@ -11,6 +11,7 @@ import (
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
 )
 
@@ -75,6 +76,15 @@ func SawitAcceptChallenge(c *messageutil.MessageContext) error {
 	if err != nil {
 		c.Logger.Errorf("Failed to get challenger sawit: %s", err)
 		return err
+	}
+
+	if acceptorSawit.Height < 0 {
+		c.SendMessage(&waE2E.Message{
+			Conversation: proto.String(
+				fmt.Sprintf("Dear, %s, your sawit height is negative, go pay your debt buddy 😭🙏", acceptorSawit.GetName()),
+			),
+		})
+		return nil
 	}
 
 	isChallengerWin := r.Float32() <= 0.5
