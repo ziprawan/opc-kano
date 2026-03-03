@@ -50,18 +50,18 @@ func (c MessageContext) SendMessage(message *waE2E.Message) (whatsmeow.SendRespo
 }
 
 func (c MessageContext) IsMe(jid types.JID) bool {
-	if jid.Server != types.HiddenUserServer && jid.Server != types.DefaultUserServer {
-		return false
+	clid := c.Client.GetLID().ToNonAD()
+	cjid := c.Client.GetJID().ToNonAD()
+
+	if jid.Server == types.HiddenUserServer {
+		return clid == jid
 	}
 
 	if jid.Server == types.DefaultUserServer {
-		lid, err := c.Client.GetLIDForPN(jid)
-		if err == nil {
-			jid = lid
-		}
+		return cjid == jid
 	}
 
-	return c.Client.GetJID() == jid
+	return false
 }
 
 func (c MessageContext) GetParticipantID() (uint, error) {

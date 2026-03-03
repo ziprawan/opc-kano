@@ -3,6 +3,7 @@ package messageutil
 import (
 	"strings"
 
+	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -203,4 +204,10 @@ func (c *MessageContext) GetRepliedMessage() (types.MessageID, types.JID, *waE2E
 	}
 
 	return "", types.JID{}, nil
+}
+
+func (c *MessageContext) EditMessageWithID(msgId types.MessageID, msg *waE2E.Message) (whatsmeow.SendResponse, error) {
+	return c.SendMessage(
+		c.Client.BuildEdit(c.GetChat(), msgId, msg),
+	)
 }

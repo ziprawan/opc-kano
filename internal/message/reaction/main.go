@@ -1,9 +1,19 @@
 package reaction
 
-import "kano/internal/utils/messageutil"
+import (
+	"kano/internal/database"
+	"kano/internal/utils/messageutil"
+)
+
+var db = database.GetInstance()
 
 func Main(c *messageutil.MessageContext) error {
 	err := VoReactApproval(c)
+	if err != nil {
+		c.Logger.Errorf("%s", err)
+	}
+
+	err = SawitAcceptChallenge(c)
 	if err != nil {
 		c.Logger.Errorf("%s", err)
 	}

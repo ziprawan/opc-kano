@@ -1,8 +1,6 @@
 package sawit
 
 import (
-	"kano/internal/database"
-	"kano/internal/database/models"
 	"kano/internal/utils/messageutil"
 	"math"
 	"math/rand"
@@ -11,11 +9,10 @@ import (
 
 const GROW_PROB = 0.9
 
-var db = database.GetInstance()
-
 func Grow(c *messageutil.MessageContext) error {
 	partId, err := c.GetParticipantID()
 	if err != nil {
+		c.QuoteReply("%s", err)
 		return err
 	}
 
@@ -28,11 +25,8 @@ func Grow(c *messageutil.MessageContext) error {
 	hour := int(math.Floor(diff.Hours())) % 24
 	minute := int(math.Floor(diff.Minutes())) % 60
 
-	foundSawit := models.Sawit{ParticipantId: partId}
-	tx := db.
-		Where(&foundSawit).
-		FirstOrCreate(&foundSawit)
-	if err := tx.Error; err != nil {
+	foundSawit, err := GetParticipantSawit(partId)
+	if err != nil {
 		c.QuoteReply("Failed to get participant's sawit: %s", err)
 		return err
 	}
@@ -42,7 +36,7 @@ func Grow(c *messageutil.MessageContext) error {
 		return nil
 	}
 
-	size := r.Intn(18) + 2
+	size := r.Intn(19) + 2
 	status := "grown"
 
 	isGrow := r.Float32() < GROW_PROB
@@ -51,10 +45,10 @@ func Grow(c *messageutil.MessageContext) error {
 		size = -size
 	}
 
-	foundSawit.Height += size
-	foundSawit.LastGrowDate = nowDateStr
-	tx = db.Save(&foundSawit)
-	if err := tx.Error; err != nil {
+	foundSawit.AddHeight(size)
+	foundSawit.ChangeGrowDate(nowDateStr)
+	err = foundSawit.Save()
+	if err != nil {
 		c.QuoteReply("Failed to save participant's sawit: %s", err)
 		return err
 	}

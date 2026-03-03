@@ -3,6 +3,7 @@ package handles
 import (
 	"kano/internal/message/handles/sawit"
 	"kano/internal/utils/messageutil"
+	"strconv"
 )
 
 func SawitHandler(c *messageutil.MessageContext) error {
@@ -22,6 +23,14 @@ func SawitHandler(c *messageutil.MessageContext) error {
 		return sawit.Grow(c)
 	case "leaderboard", "lb", "l":
 		return sawit.Leaderboard(c)
+	default:
+		theNum, err := strconv.ParseUint(cmd, 10, 0)
+		if err != nil {
+			c.QuoteReply("Invalid sawit command %s", cmd)
+			return nil
+		} else {
+			return sawit.Attack(c, uint(theNum))
+		}
 	}
 
 	return nil

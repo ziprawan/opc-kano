@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type Sawit struct {
 	ParticipantId uint      `gorm:"primaryKey"`
@@ -23,14 +26,18 @@ func (_ Sawit) TableName() string {
 }
 
 type SawitAttack struct {
-	ParticipantId uint      `gorm:"primaryKey"`
-	CreatedAt     time.Time `gorm:"autoCreateTime"`
-	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
+	ID        uint      `gorm:"primaryKey;autoIncrement"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 
-	MessageId  string
-	BetSize    uint
-	AcceptedBy uint
+	ParticipantId uint
+	GroupId       uint
+	MessageId     string
+	AttackSize    uint
+	AcceptedBy    sql.NullInt32
+	IsAttackerWin sql.NullBool
 
+	Group       *Group       `gorm:"foreignKey:GroupId;references:ID"`
 	Participant *Participant `gorm:"foreignKey:ParticipantId;references:ID"`
 	Accepted    *Participant `gorm:"foreignKey:AcceptedBy;references:ID"`
 }

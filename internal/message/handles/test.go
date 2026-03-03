@@ -2,26 +2,50 @@ package handles
 
 import (
 	"encoding/json"
-	"kano/internal/config"
-	"kano/internal/utils/chatutil/grouputil"
+	"fmt"
 	"kano/internal/utils/messageutil"
 
-	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/proto/waE2E"
+	"google.golang.org/protobuf/proto"
 )
 
 func Test(ctx *messageutil.MessageContext) error {
-	if !ctx.IsSenderSame(config.GetConfig().OwnerJID) {
-		return nil
-	}
+	mar, _ := json.Marshal(map[string]any{
+		"display_text": "Google",
+		"url":          "https://www.google.com",
+	})
 
-	jid, _ := types.ParseJID("120363320329260818@g.us")
-	info, err := grouputil.InitDb(ctx.Client.GetClient(), jid)
-	if err != nil {
-		ctx.QuoteReply("Failed to init group: %s", err)
-		return err
+	interactiveMessage := &waE2E.InteractiveMessage{
+		Header: &waE2E.InteractiveMessage_Header{
+			Title:              proto.String("Ini judul"),
+			Subtitle:           proto.String("Ini subjudul"),
+			HasMediaAttachment: proto.Bool(false),
+		},
+		Body: &waE2E.InteractiveMessage_Body{
+			Text: proto.String("Ini body"),
+		},
+		Footer: &waE2E.InteractiveMessage_Footer{
+			Text: proto.String("Ini footer"),
+		},
+		InteractiveMessage: &waE2E.InteractiveMessage_NativeFlowMessage_{
+			NativeFlowMessage: &waE2E.InteractiveMessage_NativeFlowMessage{
+				Buttons: []*waE2E.InteractiveMessage_NativeFlowMessage_NativeFlowButton{
+					{
+						Name:             proto.String("cta_url"),
+						ButtonParamsJSON: proto.String(string(mar)),
+					},
+				},
+			},
+		},
 	}
-	mar, _ := json.MarshalIndent(info, "", "  ")
-	ctx.QuoteReply("```%s```", string(mar))
+	fmt.Printf("%+v\n", interactiveMessage)
+
+	_, err := ctx.SendMessage(&waE2E.Message{
+		InteractiveMessage: interactiveMessage,
+	})
+	fmt.Println(err)
+
+	// ctx.Client.GetClient().DangerousInternals().Message
 
 	return nil
 }

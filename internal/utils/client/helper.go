@@ -35,3 +35,7 @@ func (c *ClientContext) GetSubGroups(community types.JID) ([]*types.GroupLinkTar
 func (c *ClientContext) GetJoinedGroups() ([]*types.GroupInfo, error) {
 	return c.client.GetJoinedGroups(context.Background())
 }
+
+func (c *ClientContext) BuildEdit(chat types.JID, id types.MessageID, newContent *waE2E.Message) *waE2E.Message {
+	return c.client.BuildEdit(chat, id, newContent)
+}
