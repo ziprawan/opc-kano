@@ -75,5 +75,8 @@ func (s *Sawit) LoseAttack(height uint) {
 }
 
 func (s Sawit) GetWinrate() float64 {
+	if s.AttackTotal == 0 {
+		return 1
+	}
 	return float64(s.AttackWin) / float64(s.AttackTotal)
 }
