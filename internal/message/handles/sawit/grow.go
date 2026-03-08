@@ -45,6 +45,15 @@ func Grow(c *messageutil.MessageContext) error {
 		size = -size
 	}
 
+	isForced := false
+
+	if foundSawit.Height < 0 {
+		isForced = true
+		isGrow = true             // Force grow
+		status = "grow"           // Following the isGrow
+		size = -foundSawit.Height // Let the height to be 0
+	}
+
 	foundSawit.AddHeight(size)
 	foundSawit.ChangeGrowDate(nowDateStr)
 	err = foundSawit.Save()
@@ -59,9 +68,16 @@ func Grow(c *messageutil.MessageContext) error {
 		return err
 	}
 
-	c.QuoteReply(
-		"Your sawit has %s by *%d cm* and now it is has *%d cm* height.\nYour position in the top is %d.\n\nNext grower in *%dh %dm*",
-		status, int(math.Abs(float64(size))), foundSawit.Height, position, hour, minute,
-	)
+	if isForced {
+		c.QuoteReply(
+			"Your sawit height is negative, huh? I think I will just make it *0 cm* height.\nYour position in the top is %d.\n\nNext grower in *%dh %dm*",
+			position, hour, minute,
+		)
+	} else {
+		c.QuoteReply(
+			"Your sawit has %s by *%d cm* and now it is has *%d cm* height.\nYour position in the top is %d.\n\nNext grower in *%dh %dm*",
+			status, int(math.Abs(float64(size))), foundSawit.Height, position, hour, minute,
+		)
+	}
 	return nil
 }
