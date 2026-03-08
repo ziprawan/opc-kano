@@ -78,7 +78,7 @@ func SawitAcceptChallenge(c *messageutil.MessageContext) error {
 		return err
 	}
 
-	if acceptorSawit.Height < 0 {
+	if acceptorSawit.Height <= 0 {
 		c.SendMessage(&waE2E.Message{
 			Conversation: proto.String(
 				fmt.Sprintf("Dear, %s, your sawit height is negative, go pay your debt buddy 😭🙏", acceptorSawit.GetName()),
