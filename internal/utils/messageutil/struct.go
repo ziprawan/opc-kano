@@ -32,7 +32,7 @@ type MessageContext struct {
 	// Contact (database) info
 	Contact contactutil.Contact
 	// Group info
-	Group grouputil.Group
+	Group *grouputil.Group
 
 	// Shorthand of Event.Message
 	Message *waE2E.Message

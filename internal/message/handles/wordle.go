@@ -25,6 +25,11 @@ func filterString(str string) string {
 }
 
 func WordleHandler(c *messageutil.MessageContext) error {
+	if c.Group.ID != 0 && !c.Group.GroupSettings.IsGameAllowed {
+		c.Logger.Debugf("Game is not allowed in %s", c.Group.JID)
+		return nil
+	}
+
 	now := time.Now().UTC()
 	nowStr := now.Format("02-01-2006")
 

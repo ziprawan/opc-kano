@@ -21,14 +21,20 @@ var log = config.GetLogger().Sub("GroupUtil")
 
 type Group struct {
 	models.Group
+
+	GroupSettings *GroupSettings
 }
 
-func Init(cli *whatsmeow.Client, groupJid types.JID) (Group, error) {
+func Init(cli *whatsmeow.Client, groupJid types.JID) (*Group, error) {
 	group, err := InitDb(cli, groupJid)
 	if group != nil {
-		return Group{Group: *group}, nil
+		settings, err := InitSettings(group.ID)
+		if err != nil {
+			return &Group{}, err
+		}
+		return &Group{Group: *group, GroupSettings: settings}, nil
 	}
-	return Group{}, err
+	return &Group{}, err
 }
 
 func InitDb(cli *whatsmeow.Client, groupJid types.JID) (*models.Group, error) {

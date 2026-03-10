@@ -12,6 +12,11 @@ func SawitHandler(c *messageutil.MessageContext) error {
 		return nil
 	}
 
+	if !c.Group.GroupSettings.IsGameAllowed {
+		c.Logger.Debugf("Game is not allowed in %s", c.Group.JID)
+		return nil
+	}
+
 	args := c.Parser.Args
 	if len(args) == 0 {
 		return sawit.Grow(c)

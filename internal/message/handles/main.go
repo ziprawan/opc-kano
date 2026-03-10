@@ -67,6 +67,9 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 	"sawit": CommandHandler{
 		Func: SawitHandler,
 	},
+	"game": CommandHandler{
+		Func: GameHandler,
+	},
 
 	// "jadwal": CommandHandler{
 	// 	Func:    Jadwal,
