@@ -10,7 +10,7 @@ func GameHandler(c *messageutil.MessageContext) error {
 	enables := []string{"true", "on", "yes", "1"}
 	disables := []string{"false", "off", "no", "0"}
 
-	if c.Group.ID == 0 {
+	if c.Group == nil {
 		c.QuoteReply("You can only set game allowance in groups.")
 		return nil
 	}
@@ -38,11 +38,11 @@ func GameHandler(c *messageutil.MessageContext) error {
 
 	e := ""
 	if isEnabled {
-		c.Group.Settings.IsGameAllowed = true
+		c.Group.GroupSettings.IsGameAllowed = true
 		e = "enabled"
 	}
 	if isDisabled {
-		c.Group.Settings.IsGameAllowed = false
+		c.Group.GroupSettings.IsGameAllowed = false
 		e = "disabled"
 	}
 

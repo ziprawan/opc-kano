@@ -14,8 +14,11 @@ func InitSettings(groupId uint) (*GroupSettings, error) {
 
 	db := database.GetInstance()
 	tx := db.Where("id = ?", groupId).FirstOrCreate(&settings)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
 
-	return &settings, tx.Error
+	return &settings, nil
 }
 
 func (gs *GroupSettings) Save() error {
