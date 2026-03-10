@@ -158,7 +158,7 @@ func SawitAcceptChallenge(c *messageutil.MessageContext) error {
 	)
 	waMsg := &waE2E.Message{Conversation: &msg}
 
-	if time.Since(sawitAttack.CreatedAt) > (24 * time.Hour) {
+	if time.Since(sawitAttack.CreatedAt) > (1 * time.Hour) {
 		c.SendMessage(waMsg)
 	} else {
 		c.EditMessageWithID(sawitAttack.MessageId, waMsg)
