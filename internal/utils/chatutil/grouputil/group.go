@@ -207,7 +207,11 @@ func Insert(grpInfo types.GroupInfo) (*models.Group, error) {
 func (g Group) GetParticipantRole(contactId uint) (models.ParticipantRole, error) {
 	part := models.Participant{GroupID: g.ID, ContactID: contactId}
 	db := database.GetInstance()
-	tx := db.Where(&part).Assign(models.Participant{Role: models.ParticipantRoleMember}).FirstOrCreate(&part)
+	tx := db.
+		Where("group_id = ?", g.ID).
+		Where("contact_id = ?", contactId).
+		Assign(models.Participant{Role: models.ParticipantRoleMember}).
+		FirstOrCreate(&part)
 	if tx.Error != nil {
 		return models.ParticipantRoleLeft, tx.Error
 	}
