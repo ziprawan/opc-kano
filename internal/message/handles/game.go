@@ -1,6 +1,7 @@
 package handles
 
 import (
+	"kano/internal/database/models"
 	"kano/internal/utils/messageutil"
 	"slices"
 	"strings"
@@ -12,6 +13,16 @@ func GameHandler(c *messageutil.MessageContext) error {
 
 	if c.Group == nil {
 		c.QuoteReply("You can only set game allowance in groups.")
+		return nil
+	}
+
+	role, err := c.Group.GetParticipantRole(c.Contact.ID)
+	if err != nil {
+		c.QuoteReply("Failed to get participant role: %s", err)
+		return err
+	}
+	if role != models.ParticipantRoleAdmin && role != models.ParticipantRoleSuperadmin {
+		c.QuoteReply("Your role in this group is not admin or superadmin.")
 		return nil
 	}
 

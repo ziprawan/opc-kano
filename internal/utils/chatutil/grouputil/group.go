@@ -203,3 +203,14 @@ func Insert(grpInfo types.GroupInfo) (*models.Group, error) {
 	caches[groupJid.String()] = &grp
 	return &grp, nil
 }
+
+func (g Group) GetParticipantRole(contactId uint) (models.ParticipantRole, error) {
+	part := models.Participant{GroupID: g.ID, ContactID: contactId}
+	db := database.GetInstance()
+	tx := db.Where(&part).Assign(models.Participant{Role: models.ParticipantRoleMember}).FirstOrCreate(&part)
+	if tx.Error != nil {
+		return models.ParticipantRoleLeft, tx.Error
+	}
+
+	return part.Role, nil
+}
