@@ -57,7 +57,7 @@ func GameHandler(c *messageutil.MessageContext) error {
 		e = "disabled"
 	}
 
-	err := c.Group.GroupSettings.Save()
+	err = c.Group.GroupSettings.Save()
 	if err != nil {
 		c.QuoteReply("Internal error.\nDebug: %s", err)
 		return err
