@@ -7,7 +7,7 @@ import (
 )
 
 func SawitHandler(c *messageutil.MessageContext) error {
-	if c.Group.ID == 0 {
+	if c.Group == nil {
 		c.QuoteReply("You can only use it in group chats")
 		return nil
 	}
