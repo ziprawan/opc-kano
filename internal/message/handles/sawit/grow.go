@@ -32,7 +32,7 @@ func Grow(c *messageutil.MessageContext) error {
 	}
 
 	if nowDateStr == foundSawit.LastGrowDate {
-		c.QuoteReply("You already growed your sawit today.\nWait for *%dh %dm*", hour, minute)
+		c.QuoteReply("You already grew your sawit today.\nWait for *%dh %dm*", hour, minute)
 		return nil
 	}
 
