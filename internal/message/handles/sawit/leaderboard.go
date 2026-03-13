@@ -59,7 +59,7 @@ func Draobredael(c *messageutil.MessageContext) error {
 		Preload("Participant.Contact").
 		Joins("JOIN participant ON participant.id = sawit.participant_id").
 		Where("participant.group_id = ?", c.Group.ID).
-		Order("sawit.height DESC, sawit.updated_at DESC").
+		Order("sawit.height ASC, sawit.updated_at DESC").
 		Select("participant_id", "height", "last_grow_date").
 		Limit(10).
 		Find(&founds)
