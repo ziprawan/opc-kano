@@ -89,7 +89,16 @@ func SawitAcceptChallenge(c *messageutil.MessageContext) error {
 			msg = fmt.Sprintf("Dear, %s, you don't have any sawit right now", acceptorSawit.GetName())
 		}
 		c.SendMessage(&waE2E.Message{
-			Conversation: proto.String(msg),
+			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+				Text: proto.String(msg),
+				ContextInfo: &waE2E.ContextInfo{
+					StanzaID:    &sawitAttack.MessageId,
+					Participant: proto.String(c.Client.Store.GetLID().String()),
+					QuotedMessage: &waE2E.Message{
+						Conversation: proto.String("This is placeholder message, if you are seeing this, maybe the replied message is too old."),
+					},
+				},
+			},
 		})
 		return nil
 	}
