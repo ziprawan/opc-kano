@@ -28,6 +28,8 @@ func SawitHandler(c *messageutil.MessageContext) error {
 		return sawit.Grow(c)
 	case "leaderboard", "lb", "l":
 		return sawit.Leaderboard(c)
+	case "draobredael", "bl":
+		return sawit.Draobredael(c)
 	case "stat", "sta", "st", "s":
 		return sawit.Stat(c)
 	default:
