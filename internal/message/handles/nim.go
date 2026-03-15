@@ -195,13 +195,17 @@ func Nim(c *messageutil.MessageContext) error {
 		return nil
 	}
 
-	builtStr := fmt.Sprintf("Found %d students\nQuery time: %d ms", len(founds), qDiffTime)
+	var builtStr strings.Builder
+	fmt.Fprintf(&builtStr, "Found %d students\nQuery time: %d ms", len(founds), qDiffTime)
 
-	for _, student := range founds {
-		builtStr += fmt.Sprintf("\n=====\nName: %s\nNIM: %d\nMajor - Faculty: %s - %s", student.Name, student.Nim, student.Major, student.Faculty)
+	for i, student := range founds {
+		if i > 100 {
+			break
+		}
+		fmt.Fprintf(&builtStr, "\n=====\nName: %s\nNIM: %d\nMajor - Faculty: %s - %s", student.Name, student.Nim, student.Major, student.Faculty)
 	}
 
-	c.QuoteReply("%s", builtStr)
+	c.QuoteReply("%s", builtStr.String())
 
 	return nil
 }
