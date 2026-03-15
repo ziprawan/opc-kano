@@ -52,9 +52,9 @@ func Grow(c *messageutil.MessageContext) error {
 		isGrow = true   // Force grow
 		status = "grow" // Following the isGrow
 		if size < -100 {
-			size = -foundSawit.Height // Let the height to be 0
-		} else {
 			size = 100
+		} else {
+			size = -foundSawit.Height // Let the height to be 0
 		}
 	}
 
