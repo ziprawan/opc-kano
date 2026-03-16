@@ -51,7 +51,7 @@ func Grow(c *messageutil.MessageContext) error {
 		isForced = true
 		isGrow = true   // Force grow
 		status = "grow" // Following the isGrow
-		if size < -100 {
+		if foundSawit.Height < -100 {
 			size = 100
 		} else {
 			size = -foundSawit.Height // Let the height to be 0
