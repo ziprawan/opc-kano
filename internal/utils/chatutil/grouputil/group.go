@@ -204,6 +204,76 @@ func Insert(grpInfo types.GroupInfo) (*models.Group, error) {
 	return &grp, nil
 }
 
+func Update(grpInfo types.GroupInfo) (*models.Group, error) {
+	if grpInfo.IsParent {
+		return nil, fmt.Errorf("jid is community, not group")
+	}
+
+	groupJid := grpInfo.JID
+	if c, o := caches[groupJid.String()]; o && c != nil {
+		log.Debugf("Found group data at cache with name %s", c.Name)
+		return c, nil
+	}
+
+	if groupJid.Server != types.GroupServer {
+		log.Errorf("given jid server is not a group")
+		return nil, fmt.Errorf("given jid server is not a group")
+	}
+
+	db := database.GetInstance()
+	grp := models.Group{JID: groupJid}
+	tx := db.Where(&grp).First(&grp)
+
+	if tx.Error == nil {
+		log.Debugf("Found group data at database with name %s", grp.Name)
+		return &grp, nil
+	}
+
+	// Has another error than ErrRecordNotFound
+	if !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		log.Errorf("Failed to get group data from database: %s", tx.Error.Error())
+		return nil, tx.Error
+	}
+
+	if grpInfo.LinkedParentJID.Server == types.GroupServer {
+		comm, err := communityutil.Get(grpInfo.LinkedParentJID)
+		if err != nil {
+			log.Errorf("Failed to get community info: %s", err.Error())
+		}
+		grp.CommunityID = sql.NullInt64{Valid: true, Int64: int64(comm.ID)}
+	}
+
+	grp.Name = grpInfo.Name
+	if len(grpInfo.Participants) > 0 {
+		log.Debugf("Got %d participant(s)", len(grpInfo.Participants))
+		participants := make([]types.JID, len(grpInfo.Participants))
+		ids, err := contactutil.GetIDs(participants)
+		if err != nil {
+			log.Errorf("Failed to get contact IDs: %s", err.Error())
+			return nil, err
+		}
+
+		partModels := make([]models.Participant, len(participants))
+		i := 0
+		for _, id := range ids {
+			partModels[i].ContactID = id
+			i++
+		}
+
+		grp.Participants = partModels
+	}
+
+	tx = db.Create(&grp)
+
+	if tx.Error != nil {
+		log.Errorf("Failed to insert group to database: %s", tx.Error)
+		return nil, tx.Error
+	}
+
+	caches[groupJid.String()] = &grp
+	return &grp, nil
+}
+
 func (g Group) GetParticipantRole(contactId uint) (models.ParticipantRole, error) {
 	part := models.Participant{GroupID: g.ID, ContactID: contactId}
 	db := database.GetInstance()
@@ -215,6 +285,7 @@ func (g Group) GetParticipantRole(contactId uint) (models.ParticipantRole, error
 	if tx.Error != nil {
 		return models.ParticipantRoleLeft, tx.Error
 	}
+	fmt.Printf("%+v\n", part)
 
 	return part.Role, nil
 }
