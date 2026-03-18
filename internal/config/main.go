@@ -18,7 +18,7 @@ func Init() {
 		log = logger.Init("Kano", logLevel)
 	}
 	if parserObj == nil {
-		parserObj = parser.Init([]string{"/", "!", ".", "/ ", "! ", ". "})
+		parserObj = parser.Init([]string{"/", "!", "."})
 	}
 	if configObj == nil {
 		configObj = InitConfig()
