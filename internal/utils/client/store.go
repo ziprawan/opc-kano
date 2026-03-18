@@ -19,8 +19,14 @@ func (c *ClientContext) GetManyLIDsForPNs(pns []types.JID) (map[types.JID]types.
 }
 
 func (c *ClientContext) GetJID() types.JID {
-	return c.Store.GetJID()
+	return c.Store.GetJID().ToNonAD()
 }
 func (c *ClientContext) GetLID() types.JID {
+	return c.Store.GetLID().ToNonAD()
+}
+func (c *ClientContext) GetADJID() types.JID {
+	return c.Store.GetJID()
+}
+func (c *ClientContext) GetADLID() types.JID {
 	return c.Store.GetLID()
 }
