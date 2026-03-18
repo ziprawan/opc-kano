@@ -66,3 +66,22 @@ func GameHandler(c *messageutil.MessageContext) error {
 
 	return nil
 }
+
+var GameMan = CommandMan{
+	Name: "game - enable/disable game in group chat",
+	Synopsis: []string{
+		"*game* [ _set_ ]",
+	},
+	Description: []string{
+		"Enable or disable game in the group chat. This command can only be executed by admin or higher.",
+		"When no arguments are given, the bot will return the current game settings whether they are enabled or not.",
+		"_set_" +
+			"\n{SPACE}Value to set the game's permission within the group. Use *on*/*true*/*yes*/*1* to enable, *off*/*false*/*no*/*0* to disable." +
+			"\n{SPACE}If the _set_ argument value is invalid, the bot will return an error message.",
+	},
+	SourceFilename: "game.go",
+	SeeAlso: []SeeAlso{
+		{"wordle", SeeAlsoTypeCommand},
+		{"sawit", SeeAlsoTypeCommand},
+	},
+}

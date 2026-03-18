@@ -53,6 +53,8 @@ type ParseResult struct {
 	NamedArgs NamedArgument
 	RawArg    Argument
 
+	Prefixes []string
+
 	// Tagged  []string
 }
 

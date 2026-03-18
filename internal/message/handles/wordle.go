@@ -146,3 +146,22 @@ func WordleHandler(c *messageutil.MessageContext) error {
 
 	return nil
 }
+
+var WordleMan = CommandMan{
+	Name:     "wordle - guess the word",
+	Synopsis: []string{"*wordle* [ _guess_word_ ]"},
+	Description: []string{
+		"A Wordle-style game where you guess a word without any external hints. The target word always consists of 5 letters. You are given up to 6 attempts to guess the correct word. After each incorrect guess, the bot provides feedback by displaying the word along with color indicators for each letter:" +
+			"\n- Gray: The letter is not present in the target word" +
+			"\n- Yellow: The letter exists in the target word but is in the wrong position" +
+			"\n- Green: The letter exists and is in the correct position",
+		"The word is reset daily at 00:00 UTC.",
+		"[ _guess_word_ ]" +
+			"\n{SPACE}The word to guess. It must contain at least 5 characters:" +
+			"\n{SPACE}- If fewer than 5 characters are provided, the bot will return an error" +
+			"\n{SPACE}- If more than 5 characters are provided, only the first 5 characters will be used" +
+			"\n{SPACE}Any characters outside `a-z` or `A-Z` will be ignored.",
+	},
+	SourceFilename: "wordle.go",
+	SeeAlso:        []SeeAlso{},
+}

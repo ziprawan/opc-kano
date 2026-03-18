@@ -114,3 +114,33 @@ func Stk(c *messageutil.MessageContext) error {
 
 	return err
 }
+
+var StkMan = CommandMan{
+	Name: "stk - make a sticker",
+	Synopsis: []string{
+		"*stk* [ *name=*_pack_name_ ] [ _pack_publisher_ ]",
+	},
+	Description: []string{
+		"Creates a sticker from the provided media. This command can be invoked by sending media with a caption containing the command, or by replying to a media message with .stk.",
+		"Currently supported media types include images, videos, and documents.",
+		"- If the media is an image, a static sticker will be generated." +
+			"\n- If the media is a video, an animated sticker will be generated." +
+			"\n- If the media is a document, the bot will first inspect its type:" +
+			"\n{SPACE}- If the document is an image, a static sticker will be generated." +
+			"\n{SPACE}- If the document is a video, an animated sticker will be generated." +
+			"\n{SPACE}- If the document is neither an image nor a video, the bot will return an error.",
+		"_pack_name_" +
+			"\n{SPACE}The name of the sticker pack. In the application, this text appears in bold and is typically positioned on the left if a pack publisher is also defined.",
+		"_pack_publisher_" +
+			"\n{SPACE}The name of the sticker pack publisher. In the application, this text is not bold and appears to the right of the pack name, separated by a small dot when both are present.",
+		"By default, generated stickers do not include visible metadata (the text shown beneath the sticker when it is opened). To include this visual metadata, you must define `pack_name` and/or `pack_publisher`.",
+		"*Additional Informations:*" +
+			"\n- Generated stickers are always in WebP format." +
+			"\n- Output size is always 512x512, even if the original media is smaller." +
+			"\n- All stickers are assigned to the pack metadata ID kano_sticker_packs." +
+			"\n- If the media does not have a 1:1 aspect ratio, the remaining space will be padded with transparency." +
+			"\n- If the media is a video, the bot will return an error if the duration exceeds 10 seconds.",
+	},
+	SourceFilename: "stk.go",
+	SeeAlso:        []SeeAlso{},
+}

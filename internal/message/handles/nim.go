@@ -209,3 +209,32 @@ func Nim(c *messageutil.MessageContext) error {
 
 	return nil
 }
+
+var NimHelp = CommandMan{
+	Name: "nim - search for some ITB student info",
+	Synopsis: []string{
+		"*nim* _nim number_ ...",
+		"*nim* _student name_ ...",
+	},
+	Description: []string{
+		"Find a little info about some students at ITB (Institut Teknologi Bandung). These data are sourced from Edunex site Search results are limited to 100 student records. " +
+			"The info that will appear as results includes:" +
+			"\n- Name" +
+			"\n- Student ID (NIM)" +
+			"\n- Faculty and Major",
+		"ITB's student ID number has an 8-digit format convention. The first digit indicates the level of study (bachelor's, master's, or doctoral), the next two digits (digits 2-3) indicate the major taken, the next two digits (digits 4-5) indicate the year of commencement, and the last three digits (digits 6-8) are unique numbers sequentially starting from 1. In special cases, students who enter through international channels have the last three student ID numbers that are different from the others.",
+		"If the argument is a positive number, the search will be performed based on matching the student ID number with the given number. Searching using the student ID number has the following simple rules:" +
+			"\n- If the given number is exactly 8 digits, the returned result is guaranteed to only find one student with the same student ID number, otherwise, it will return 0 students." +
+			"\n- If the given number is more than 8 digits, the search will only retrieve the first 8 digits of the given number, and the same procedure will be applied for searches with 8-digit numbers." +
+			"\n- If the given number is less than 8 digits, the returned result will be all students whose student ID number begins with the given number.",
+		"Searching using Student ID supports ranges with the condition: in one given argument, there are at least two numbers separated by HYPEN MINUS U+002D (-), where the number on the left is called the *starting number* and the number on the right is called the *ending number*. For example: `10124001-10124050`, where `10124001` is the *starting number* and `10124050` is the *ending number*. The number rules are still the same as the number argument rules, but with the following additions:" +
+			"\n- If the *starting number* has the same length as the *ending number* and the value of the *ending number* is smaller than the value of the *starting number*, the automatic search will swap the positions of the *ending number* and *starting number*. Example: `10124050-10124001` will be treated as `10124001-10124050`" +
+			"\n- If the *ending number* has smaller length than the *ending number*, then the *ending number* will be prefixed like the *starting number* until it has the same length as the *starting number*. Example: `10120-4` will be treated as `10120-10124`, which will be treated as `10120000-10124000`." +
+			"\n- If the *starting number* has smaller length than the *ending number*, the *starting number* will be multiplied by 10 until it has the same length as the *ending number*. Example: `1-20` will be treated as `10-20`, which will be treated as `10000000-20000000`.",
+		"If the given argument cannot be converted to a number, the bot will assume a name search. Name searches are sorted by how well the given name matches the names in the database using a trigram search algorithm.",
+	},
+	SourceFilename: "nim.go",
+	SeeAlso: []SeeAlso{
+		{"https://edunex.itb.ac.id/messages/", SeeAlsoTypeExternalLink},
+	},
+}

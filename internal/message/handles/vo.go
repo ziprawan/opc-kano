@@ -166,3 +166,21 @@ func Vo(c *messageutil.MessageContext) (err error) {
 
 	return
 }
+
+var VoMan = CommandMan{
+	Name:     "vo - unwrap a view-once message",
+	Synopsis: []string{"*vo*"},
+	Description: []string{
+		"Unwraps a replied view-once message. Supports all currently known types of view-once messages, including images, videos, and audio. In certain cases, this command may fail to execute if:" +
+			"\n- The command sender is using the WhatsApp desktop client" +
+			"\n- The command sender is using the latest version of WhatsApp",
+		"If the owner of the view-once message is the same as the command sender, the bot will immediately unwrap the message. If the owner is different (i.e., another user attempts to view the message again), the bot will send a request message in the chat.",
+		"The owner of the view-once message can react to the request message with:" +
+			"\n- ✅ ✔️ ☑️ to approve" +
+			"\n- ❌ ✖️ 🚫 to reject" +
+			"\n- Or ignore it to take no action",
+		"A view-once message that has already been requested cannot be requested again, even if the owner has not yet approved or rejected the request.",
+	},
+	SourceFilename: "vo.go",
+	SeeAlso:        []SeeAlso{},
+}

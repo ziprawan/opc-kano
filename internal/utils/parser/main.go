@@ -271,6 +271,7 @@ func (p *ParseResult) parseArgs() (err error) {
 }
 
 func (p Parser) Parse(text string) (res ParseResult, err error) {
+	res.Prefixes = p.prefixes
 	res.Text = word.NormalizeQuote(strings.TrimSpace(text))
 	res.parseCommand(p.prefixes)
 	err = res.parseArgs()

@@ -21,3 +21,18 @@ func Six(c *messageutil.MessageContext) error {
 		return theFunc(c)
 	}
 }
+
+var SixMan = CommandMan{
+	Name: "six - SIX utilities",
+	Synopsis: []string{
+		"*six* *u*|*update* [ _cookie_ ]",
+		"*six* *help*",
+		"*six* *f*|*follow* _subject_code_",
+		"*six* *r*|*reminder* _subject_code_ [ [ *^* ][ *+*|*-* ] _offset_ ]",
+	},
+	Description: []string{
+		"Utilities related to the SIX ITB academic platform. Use `.six help` for more detailed information.",
+	},
+	SourceFilename: "six.go",
+	SeeAlso:        []SeeAlso{},
+}

@@ -21,3 +21,14 @@ func Ta(ctx *messageutil.MessageContext) error {
 	})
 	return nil
 }
+
+var TaMan = CommandMan{
+	Name:     "ta - tag all",
+	Synopsis: []string{"*ta*"},
+	Description: []string{
+		"This command was originally created for testing purposes. It mentions all members in the group using WhatsApp’s built-in “mention everyone” feature.",
+		"Note that some accounts and devices may not support this feature, so it is possible that certain members will not receive the mention when this command is used.",
+	},
+	SourceFilename: "ta.go",
+	SeeAlso:        []SeeAlso{},
+}
