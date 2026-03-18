@@ -87,15 +87,12 @@ func Stk(c *messageutil.MessageContext) error {
 		return nil
 	}
 
-	packName := "Kano"
-	if name := c.Info.PushName; len(name) > 0 {
-		packName = name
-	}
+	packName := ""
 	if argnames, ok := c.Parser.NamedArgs["name"]; ok && len(argnames) > 0 {
 		packName = argnames[0].Content.Data
 	}
 
-	publisher := "Absolutely Kano"
+	publisher := ""
 	if arg := c.Parser.GetAllOriginalArg(); len(c.Parser.Args) > 0 {
 		publisher = arg
 	}
