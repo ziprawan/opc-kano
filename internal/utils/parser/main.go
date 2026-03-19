@@ -27,7 +27,7 @@ func (p *ParseResult) parseCommand(prefixes []string) {
 	}
 
 	for _, prefix := range prefixes {
-		if strings.HasPrefix(p.Text, prefix) {
+		if strings.HasPrefix(p.Text, prefix) && len(p.Text) != len(prefix) {
 			// Find the start and end index of command name
 			name := Content{}
 			n := len(prefix)
