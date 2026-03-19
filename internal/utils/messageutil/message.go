@@ -153,7 +153,7 @@ func (c *MessageContext) GetCleanMessage() (content *waE2E.Message) {
 
 		content = inner.Message
 	}
-	RemoveContextInfo(content)
+	// RemoveContextInfo(content)
 	return
 }
 
