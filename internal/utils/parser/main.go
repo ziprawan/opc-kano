@@ -203,10 +203,10 @@ func (p *ParseResult) parseArgs() (err error) {
 			curstate.changeArgtype(normal)
 			curstate.changeSkipSpace(1)
 		case namedKey:
-			if len(args) > 0 {
-				err = fmt.Errorf("named argument is not allowed when normal argument is already given")
-				return
-			}
+			// if len(args) > 0 {
+			// 	err = fmt.Errorf("named argument is not allowed when normal argument is already given")
+			// 	return
+			// }
 
 			curnamed.set(content)
 			namedArgs[curnamed.val()] = append(namedArgs[curnamed.val()], Argument{})
@@ -238,8 +238,8 @@ func (p *ParseResult) parseArgs() (err error) {
 	if recordSpace == 1 {
 		// It recording space, but it is already EOF
 		// I assume the input has unclosed quote
-		err = fmt.Errorf("unclosed quote detected, perhaps you forgot (%c)?", endquote)
-		return
+		// err = fmt.Errorf("unclosed quote detected, perhaps you forgot (%c)?", endquote)
+		// return
 	}
 
 	if argstart < len(p.Text) && specialCase[p.Text[len(p.Text)-1]] != quote {
