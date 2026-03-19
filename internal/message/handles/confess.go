@@ -97,11 +97,15 @@ func Confess(c *messageutil.MessageContext) error {
 	} else if ext := theConfess.GetExtendedTextMessage(); ext != nil {
 		ext.ContextInfo = ctxInfo
 	} else if img := theConfess.GetImageMessage(); img != nil {
-		img.Caption = proto.String(args)
+		if len(args) != 0 {
+			img.Caption = proto.String(args)
+		}
 		img.ContextInfo = ctxInfo
 		canGoWithoutArgs = true
 	} else if vid := theConfess.GetVideoMessage(); vid != nil {
-		vid.Caption = proto.String(args)
+		if len(args) != 0 {
+			vid.Caption = proto.String(args)
+		}
 		vid.ContextInfo = ctxInfo
 		canGoWithoutArgs = true
 	} else if aud := theConfess.GetAudioMessage(); aud != nil {
@@ -110,11 +114,15 @@ func Confess(c *messageutil.MessageContext) error {
 		canGoWithoutArgs = true
 		additionalExists = true
 	} else if doc := theConfess.GetDocumentMessage(); doc != nil {
-		doc.Caption = proto.String(args)
+		if len(args) != 0 {
+			doc.Caption = proto.String(args)
+		}
 		doc.ContextInfo = ctxInfo
 		canGoWithoutArgs = true
 	} else if docCap := theConfess.GetDocumentWithCaptionMessage().GetMessage().GetDocumentMessage(); docCap != nil {
-		docCap.Caption = proto.String(args)
+		if len(args) != 0 {
+			docCap.Caption = proto.String(args)
+		}
 		docCap.ContextInfo = ctxInfo
 		canGoWithoutArgs = true
 	} else if stk := theConfess.GetStickerMessage(); stk != nil {
