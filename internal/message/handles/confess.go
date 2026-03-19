@@ -82,6 +82,7 @@ func Confess(c *messageutil.MessageContext) error {
 		},
 	}
 	additionalExists := false
+	canGoWithoutArgs := false
 	theConfess := c.Event.Message
 	if quoted := theConfess.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage(); quoted != nil {
 		theConfess = quoted
@@ -98,26 +99,32 @@ func Confess(c *messageutil.MessageContext) error {
 	} else if img := theConfess.GetImageMessage(); img != nil {
 		img.Caption = proto.String(args)
 		img.ContextInfo = ctxInfo
+		canGoWithoutArgs = true
 	} else if vid := theConfess.GetVideoMessage(); vid != nil {
 		vid.Caption = proto.String(args)
 		vid.ContextInfo = ctxInfo
+		canGoWithoutArgs = true
 	} else if aud := theConfess.GetAudioMessage(); aud != nil {
 		aud.ContextInfo = ctxInfo
 
+		canGoWithoutArgs = true
 		additionalExists = true
 	} else if doc := theConfess.GetDocumentMessage(); doc != nil {
 		doc.Caption = proto.String(args)
 		doc.ContextInfo = ctxInfo
+		canGoWithoutArgs = true
 	} else if docCap := theConfess.GetDocumentWithCaptionMessage().GetMessage().GetDocumentMessage(); docCap != nil {
 		docCap.Caption = proto.String(args)
 		docCap.ContextInfo = ctxInfo
+		canGoWithoutArgs = true
 	} else if stk := theConfess.GetStickerMessage(); stk != nil {
 		stk.ContextInfo = ctxInfo
 
+		canGoWithoutArgs = true
 		additionalExists = true
 	}
 
-	if !additionalExists && len(args) == 0 {
+	if !canGoWithoutArgs && len(args) == 0 {
 		c.QuoteReply("Give the confess message.")
 		return nil
 	} else {
