@@ -91,6 +91,9 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 		Aliases: []string{"disable"},
 		Man:     EnableMan,
 	},
+	"stkline": CommandHandler{
+		Func: StkLineHandler,
+	},
 
 	// "jadwal": CommandHandler{
 	// 	Func:    Jadwal,
