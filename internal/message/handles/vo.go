@@ -160,7 +160,7 @@ func Vo(c *messageutil.MessageContext) (err error) {
 	tx = db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&insert)
 	if tx.Error != nil {
 		err = tx.Error
-		c.Reply(fmt.Sprintf("Failed to save into vo_request table: %s", tx.Error), false)
+		c.Reply(fmt.Sprintf("Failed to save into vo_request table: %s", tx.Error))
 		return
 	}
 

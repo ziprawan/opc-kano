@@ -107,7 +107,7 @@ func Stk(c *messageutil.MessageContext) error {
 		return nil
 	}
 
-	_, err = c.ReplySticker(createdSticker, true)
+	_, err = c.ReplySticker(createdSticker, messageutil.ReplyConfig{Quoted: true})
 
 	return err
 }

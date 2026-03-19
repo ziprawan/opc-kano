@@ -142,7 +142,7 @@ func WordleHandler(c *messageutil.MessageContext) error {
 		return fmt.Errorf("failed to generate wordle image: %s", err)
 	}
 
-	c.ReplyImage(imgBytes, true, caption)
+	c.ReplyImage(imgBytes, caption, messageutil.ReplyConfig{Quoted: true})
 
 	return nil
 }
