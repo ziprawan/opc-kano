@@ -16,11 +16,12 @@ func GameHandler(c *messageutil.MessageContext) error {
 		return nil
 	}
 
-	role, err := c.Group.GetParticipantRole(c.Contact.ID)
+	part, err := c.Group.GetParticipantByContactId(c.Contact.ID)
 	if err != nil {
-		c.QuoteReply("Failed to get participant role: %s", err)
+		c.QuoteReply("Failed to get participant info: %s", err)
 		return err
 	}
+	role := part.Role
 	if role != models.ParticipantRoleAdmin && role != models.ParticipantRoleSuperadmin {
 		c.QuoteReply("Your role in this group is not admin or superadmin.")
 		return nil
@@ -28,7 +29,7 @@ func GameHandler(c *messageutil.MessageContext) error {
 
 	args := c.Parser.Args
 	if len(args) == 0 {
-		c.QuoteReply("Is game allowed in this group? %t", c.Group.Settings.IsGameAllowed)
+		c.QuoteReply("Is game allowed in this group? %t", c.Group.GroupSettings.IsGameAllowed)
 		return nil
 	}
 
