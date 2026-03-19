@@ -36,7 +36,7 @@ func (c MessageContext) IsSenderSame(compareJid types.JID) bool {
 	return c.GetSender().String() == nonAD || c.GetSenderAlt().String() == nonAD
 }
 
-func (c MessageContext) SendMessage(message *waE2E.Message) (whatsmeow.SendResponse, error) {
+func (c MessageContext) SendMessage(message *waE2E.Message, extra ...whatsmeow.SendRequestExtra) (whatsmeow.SendResponse, error) {
 	chat := c.GetChat(true)
 	if chat.Server == types.HiddenUserServer {
 		found, err := c.Client.GetPNForLID(chat)
@@ -46,7 +46,7 @@ func (c MessageContext) SendMessage(message *waE2E.Message) (whatsmeow.SendRespo
 			c.Logger.Warnf("Couldn't find PN for LID %s, this might cause message not appears in some devices", chat.String())
 		}
 	}
-	return c.Client.SendMessage(chat, message)
+	return c.Client.SendMessage(chat, message, extra...)
 }
 
 func (c MessageContext) IsMe(jid types.JID) bool {
