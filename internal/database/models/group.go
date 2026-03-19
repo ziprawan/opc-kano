@@ -10,9 +10,10 @@ import (
 type Group struct {
 	gorm.Model
 
-	JID         types.JID `gorm:"not null;type:text;column:jid"`
-	Name        string    `gorm:"not null"`
-	CommunityID sql.NullInt64
+	JID            types.JID `gorm:"not null;type:text;column:jid"`
+	Name           string    `gorm:"not null"`
+	CommunityID    sql.NullInt64
+	IsAnnouncement bool
 
 	Settings     *GroupSettings `gorm:"foreignKey:ID;references:ID"`
 	Community    *Community     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
@@ -24,8 +25,9 @@ func (_ Group) TableName() string {
 }
 
 type GroupSettings struct {
-	ID            uint `gorm:"primaryKey"`
-	IsGameAllowed bool
+	ID               uint `gorm:"primaryKey"`
+	IsGameAllowed    bool
+	IsConfessAllowed bool
 
 	Group *Group `gorm:"foreignKey:ID;references:ID"`
 }

@@ -23,8 +23,9 @@ func InitSettings(groupId uint) (*GroupSettings, error) {
 
 func (gs *GroupSettings) Save() error {
 	settings := models.GroupSettings{
-		ID:            gs.ID,
-		IsGameAllowed: gs.IsGameAllowed,
+		ID:               gs.ID,
+		IsGameAllowed:    gs.IsGameAllowed,
+		IsConfessAllowed: gs.IsConfessAllowed,
 	}
 
 	db := database.GetInstance()

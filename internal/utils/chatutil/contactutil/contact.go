@@ -1,6 +1,7 @@
 package contactutil
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"kano/internal/config"
@@ -14,25 +15,44 @@ import (
 var log = config.GetLogger().Sub("ContactUtil")
 
 type Contact struct {
-	ID         uint
-	JID        types.JID
-	Pushname   string
-	CustomName string
+	ID            uint
+	JID           types.JID
+	Pushname      string
+	CustomName    string
+	ConfessTarget sql.NullInt32
 }
 
-func Init(jid types.JID, pushname string) (Contact, error) {
+func Init(jid types.JID, pushname string) (*Contact, error) {
 	contact := Contact{}
 	model, err := initDb(jid, pushname)
 	if err != nil {
-		return contact, err
+		return &contact, err
 	}
 
 	contact.ID = model.ID
 	contact.JID = model.JID
 	contact.Pushname = model.PushName
 	contact.CustomName = model.CustomName
+	contact.ConfessTarget = model.ConfessTarget
 
-	return contact, nil
+	return &contact, nil
+}
+
+func (c *Contact) Save() error {
+	contact := models.Contact{
+		Model: gorm.Model{
+			ID: c.ID,
+		},
+		JID:           c.JID,
+		PushName:      c.Pushname,
+		CustomName:    c.CustomName,
+		ConfessTarget: c.ConfessTarget,
+	}
+
+	db := database.GetInstance()
+	tx := db.Save(&contact)
+
+	return tx.Error
 }
 
 func GetIDs(jids []types.JID) (map[types.JID]uint, error) {

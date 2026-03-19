@@ -42,6 +42,10 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 		Func:    Confess,
 		Aliases: []string{"c"},
 	},
+	"confesstarget": CommandHandler{
+		Func:    ConfessTargetHandler,
+		Aliases: []string{"ct"},
+	},
 	"six": CommandHandler{
 		Func: Six,
 		Man:  SixMan,
@@ -81,6 +85,11 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 		Func:    HelpHandler,
 		Aliases: []string{"man"},
 		Man:     HelpMan,
+	},
+	"enable": CommandHandler{
+		Func:    EnableHandler,
+		Aliases: []string{"disable"},
+		Man:     EnableMan,
 	},
 
 	// "jadwal": CommandHandler{

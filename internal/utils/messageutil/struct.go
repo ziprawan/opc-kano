@@ -30,7 +30,7 @@ type MessageContext struct {
 	// Logger, so you wouldn't call config.GetLogger()
 	Logger *logger.Logger
 	// Contact (database) info
-	Contact contactutil.Contact
+	Contact *contactutil.Contact
 	// Group info
 	Group *grouputil.Group
 
@@ -60,7 +60,13 @@ func CreateContext(cli *whatsmeow.Client, ev *events.Message) *MessageContext {
 	ctx.Parser, err = parser.Parse(ctx.GetText())
 	if err != nil {
 		ctx.Logger.Errorf("Failed to parse given text: %s", err)
-		ctx.QuoteReply("parser: %s", err)
+		if config.GetConfig().OwnerOnlyMode {
+			if !ctx.IsSenderSame(config.GetConfig().OwnerJID) {
+				ctx.QuoteReply("parser: %s", err)
+				return nil
+			}
+		}
+
 		return nil
 	}
 

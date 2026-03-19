@@ -11,6 +11,9 @@ type Participant struct {
 
 	Group   *Group   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Contact *Contact `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+
+	// Client-side association
+	GroupSettings *GroupSettings `gorm:"foreignKey:GroupID;references:ID"`
 }
 
 func (_ Participant) TableName() string {

@@ -15,6 +15,8 @@ func Handle(cli *whatsmeow.Client, evt any) error {
 		return Connected(cli)
 	case *events.Disconnected:
 		return Disconnected()
+	case *events.GroupInfo:
+		return GroupInfo(cli, ev)
 	case *events.HistorySync:
 		return HistorySync(cli, ev)
 	case *events.KeepAliveTimeout:

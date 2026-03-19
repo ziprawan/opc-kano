@@ -77,6 +77,7 @@ func InitDb(cli *whatsmeow.Client, groupJid types.JID) (*models.Group, error) {
 		grp.CommunityID = sql.NullInt64{Valid: true, Int64: int64(comm.ID)}
 	}
 
+	grp.IsAnnouncement = grpInfo.IsAnnounce
 	grp.Name = grpInfo.Name
 	if len(grpInfo.Participants) > 0 {
 		log.Debugf("Got %d participant(s)", len(grpInfo.Participants))
