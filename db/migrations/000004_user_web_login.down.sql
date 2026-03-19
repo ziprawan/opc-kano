@@ -1,5 +1,0 @@
-BEGIN;
-ALTER TABLE IF EXISTS contact DROP COLUMN IF EXISTS login_request_id;
-ALTER TABLE IF EXISTS contact DROP COLUMN IF EXISTS login_expiration_date;
-ALTER TABLE IF EXISTS contact DROP COLUMN IF EXISTS login_redirect;
-COMMIT;

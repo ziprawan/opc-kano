@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS "sawit_attack";
+DROP TABLE IF EXISTS "sawit";
