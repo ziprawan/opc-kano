@@ -58,6 +58,10 @@ func Confess(c *messageutil.MessageContext) error {
 	}
 
 	args := c.Parser.RawArg.Content.Data
+	if len(args) == 0 && c.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage() == nil {
+		c.QuoteReply("Give the confess message.")
+		return nil
+	}
 
 	// Goosebump
 	pl := &waE2E.Message{
