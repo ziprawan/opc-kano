@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"kano/internal/config"
 	"net/http"
 	"net/url"
 	"time"
@@ -79,7 +80,7 @@ func GetPage(paths []string, queries map[string][]string) (*url.URL, *goquery.Se
 			return nil, nil, err
 		}
 		req.AddCookie(&http.Cookie{Name: "khongguan", Value: cookie.Get()})
-		req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
+		req.Header.Set("User-Agent", config.USER_AGENT)
 
 		resp, err := client.Do(req)
 		if err != nil {
