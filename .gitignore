@@ -3,7 +3,7 @@ build/*
 json/*
 secrets/*
 tmp/*
-env.sh
+.env
 
 !logs/.gitkeep
 !build/.gitkeep

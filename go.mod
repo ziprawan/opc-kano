@@ -13,6 +13,8 @@ require (
 	gorm.io/gorm v1.31.1
 )
 
+require github.com/joho/godotenv v1.5.1 // indirect
+
 require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
