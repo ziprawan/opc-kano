@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	_ "github.com/joho/godotenv/autoload"
 	"go.mau.fi/whatsmeow/types"
 )
 
@@ -43,8 +44,10 @@ func InitConfig() *Config {
 		}
 	}
 
-	if _, err := getEnv("OWNER_ONLY"); err == nil {
-		conf.OwnerOnlyMode = true
+	if ownerOnly, err := getEnv("OWNER_ONLY"); err == nil {
+		if ownerOnly == "true" {
+			conf.OwnerOnlyMode = true
+		}
 	}
 
 	return &conf
