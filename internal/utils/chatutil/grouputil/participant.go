@@ -63,16 +63,15 @@ func (g Group) GetParticipantByJID(userJid types.JID) (Participant, error) {
 	db := database.GetInstance()
 
 	part := Participant{}
-	found, err := gorm.G[models.Participant](db).
-		Joins(clause.InnerJoin.Association("Contact"), models.NoopJoin).
-		Where("group_id = ?", g.ID).
-		Where("Contact.jid = ?", userJid).
-		First(context.Background())
-	if err != nil {
-		return part, err
-	}
 
-	part.Participant = found
+	res := db.Table("participant").Joins("JOIN contact ON contact.id = participant.contact_id").
+		Where("participant.group_id = ?", g.ID).
+		Where("contact.jid = ?", userJid.String()).
+		First(&part)
+
+	if res.Error != nil {
+		return part, res.Error
+	}
 
 	return part, nil
 }

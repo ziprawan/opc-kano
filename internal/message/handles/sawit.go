@@ -32,6 +32,18 @@ func SawitHandler(c *messageutil.MessageContext) error {
 		return sawit.Draobredael(c)
 	case "stat", "sta", "st", "s":
 		return sawit.Stat(c)
+	case "transfer", "tf", "t":
+		if len(args) < 2 {
+			c.QuoteReply("Usage: *sawit transfer* <amount> <target>")
+			return nil
+		}
+		transferAmt, err := strconv.ParseUint(args[1].Content.Data, 10, 0)
+		if err != nil {
+			c.QuoteReply("Invalid transfer amount")
+			return nil
+		}
+		targetJID := args[2].Content.Data[1:]
+		return sawit.Transfer(c, uint(transferAmt), targetJID)
 	default:
 		theNum, err := strconv.ParseUint(cmd, 10, 0)
 		if err != nil {
@@ -51,6 +63,7 @@ var SawitMan = CommandMan{
 		"*sawit* *l*|*lb*|*leaderboard*",
 		"*sawit* *bl*|*draobredael*",
 		"*sawit* *s*|*st*|*sta*|*stat*",
+		"*sawit* *t*|*tf*|*transfer* _amount_ _target_",
 	},
 	Description: []string{
 		"Sawit is a simple game where you can grow your sawit and place bets with other players. Player data is scoped per group (different groups have separate data).",
