@@ -3,7 +3,9 @@ package downloader
 import (
 	"fmt"
 	"kano/internal/utils/downloader/instagram"
+	"kano/internal/utils/downloader/tiktok"
 	"kano/internal/utils/downloader/types"
+	"kano/internal/utils/downloader/youtube"
 	"net/url"
 )
 
@@ -22,6 +24,18 @@ func Download(urlStr string) (types.DownloaderContext, error) {
 		err = instagram.Download(&ctx, u)
 		if err != nil {
 			return ctx, fmt.Errorf("instagram: %s", err)
+		}
+		return ctx, nil
+	case "www.youtube.com", "youtube.com", "youtu.be":
+		err = youtube.Download(&ctx, u)
+		if err != nil {
+			return ctx, fmt.Errorf("youtube: %s", err)
+		}
+		return ctx, nil
+	case "www.tiktok.com", "vt.tiktok.com":
+		err = tiktok.Download(&ctx, u)
+		if err != nil {
+			return ctx, fmt.Errorf("tiktok: %s", err)
 		}
 		return ctx, nil
 	default:
