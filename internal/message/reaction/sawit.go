@@ -16,8 +16,11 @@ import (
 )
 
 func SawitAcceptChallenge(c *messageutil.MessageContext) error {
-	if c.Group != nil && !c.Group.GroupSettings.IsGameAllowed {
-		c.Logger.Debugf("Game is not allowed in %s", c.Group.JID)
+	if c.Group != nil {
+		return nil
+	}
+
+	if !c.Group.GroupSettings.IsGameAllowed {
 		return nil
 	}
 
