@@ -4,30 +4,30 @@ import (
 	"fmt"
 	"kano/internal/utils/messageutil"
 
+	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"google.golang.org/protobuf/proto"
 )
 
 func Test(ctx *messageutil.MessageContext) error {
-	s, err := ctx.QuoteReply("Hai")
-	if err != nil {
-		return nil
-	}
-	fmt.Printf("%+v\n", s)
-
-	ctx.SendMessage(&waE2E.Message{
-		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-			Text: proto.String("reply"),
-			ContextInfo: &waE2E.ContextInfo{
-				StanzaID:    proto.String(s.ID),
-				Participant: proto.String(s.Sender.ToNonAD().String()),
-				QuotedMessage: &waE2E.Message{
-					Conversation: proto.String("This is placeholder message, if you are seeing this, maybe the replied message is too old."),
-				},
-				QuotedType: waE2E.ContextInfo_EXPLICIT.Enum(),
+	rectMsg := &waE2E.Message{
+		ReactionMessage: &waE2E.ReactionMessage{
+			Key: &waCommon.MessageKey{
+				RemoteJID: proto.String(ctx.GetChat(true).String()),
+				FromMe:    proto.Bool(false),
+				ID:        proto.String(ctx.GetID()),
 			},
+			Text: proto.String("😂"),
 		},
-	})
+	}
+	if ctx.Group != nil {
+		rectMsg.ReactionMessage.Key.Participant = proto.String(ctx.GetSender().String())
+	}
+	fmt.Printf("%+v\n", rectMsg)
+	_, err := ctx.SendMessage(rectMsg)
+	if err != nil {
+		ctx.QuoteReply("%s", err)
+	}
 
 	return nil
 }
