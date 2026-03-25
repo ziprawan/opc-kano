@@ -16,7 +16,7 @@ import (
 )
 
 func SawitAcceptChallenge(c *messageutil.MessageContext) error {
-	if c.Group != nil {
+	if c.Group == nil {
 		return nil
 	}
 
