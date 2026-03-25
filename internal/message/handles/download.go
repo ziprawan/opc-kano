@@ -20,6 +20,7 @@ func uploadMedias(c *messageutil.MessageContext, media types.DownloaderMedia) (*
 	height, width, duration := media.GetDimensions()
 
 	contentType := http.DetectContentType(data)
+	fmt.Println("Got contentType:", contentType)
 	mediaType := whatsmeow.MediaImage
 	if isVideo {
 		mediaType = whatsmeow.MediaVideo
@@ -62,8 +63,8 @@ func uploadMedias(c *messageutil.MessageContext, media types.DownloaderMedia) (*
 }
 
 func DownloadHandler(c *messageutil.MessageContext) error {
-	args := c.Parser.Args
-	if len(args) == 0 {
+	url := c.Parser.RawArg.Content.Data
+	if len(url) == 0 {
 		c.QuoteReply("Give url (currently supports: instagram)")
 		return nil
 	}
@@ -83,7 +84,6 @@ func DownloadHandler(c *messageutil.MessageContext) error {
 	}
 	c.SendMessage(rectMsg)
 
-	url := args[0].Content.Data
 	downloaded, err := downloader.Download(url)
 	if err != nil {
 		c.QuoteReply("%s", err)
@@ -140,16 +140,22 @@ func DownloadHandler(c *messageutil.MessageContext) error {
 		msgs[i] = msg
 	}
 
-	c.SendMessage(&waE2E.Message{
-		AlbumMessage: &waE2E.AlbumMessage{
-			ExpectedImageCount: &imageCount,
-			ExpectedVideoCount: &videoCount,
-			ContextInfo:        c.BuildReplyContextInfo(),
-		},
-	}, whatsmeow.SendRequestExtra{ID: parentMsgId})
+	if len(msgs) == 0 {
+		c.QuoteReply("No media found.")
+	} else if len(msgs) == 1 {
+		c.SendMessage(msgs[0])
+	} else {
+		c.SendMessage(&waE2E.Message{
+			AlbumMessage: &waE2E.AlbumMessage{
+				ExpectedImageCount: &imageCount,
+				ExpectedVideoCount: &videoCount,
+				ContextInfo:        c.BuildReplyContextInfo(),
+			},
+		}, whatsmeow.SendRequestExtra{ID: parentMsgId})
 
-	for _, msg := range msgs {
-		fmt.Println(c.SendMessage(msg))
+		for _, msg := range msgs {
+			fmt.Println(c.SendMessage(msg))
+		}
 	}
 
 	return nil
