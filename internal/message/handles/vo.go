@@ -42,7 +42,7 @@ func Vo(c *messageutil.MessageContext) (err error) {
 			return
 		}
 	} else {
-		msg := fmt.Sprintf("View-once message is already requested by @%s", found.RequesterJid)
+		msg := fmt.Sprintf("View-once message is already requested by @%s", found.RequesterJid.User)
 		if found.Accepted.Valid {
 			if found.Accepted.Bool {
 				msg += " and already accepted by the sender"
@@ -140,7 +140,7 @@ func Vo(c *messageutil.MessageContext) (err error) {
 			insert.Accepted = sql.NullBool{Bool: true, Valid: true}
 		}
 	} else {
-		textMsg := fmt.Sprintf("Waiting for approval from @%s (react with ✅ to approve, ❌ or just leave it alone to reject)", senderJid)
+		textMsg := fmt.Sprintf("Waiting for approval from @%s (react with ✅ to approve, ❌ or just leave it alone to reject)", senderJid.User)
 		ctxInfo := c.BuildReplyContextInfo()
 		ctxInfo.MentionedJID = []string{senderJid.String()}
 		sent, err := c.SendMessage(&waE2E.Message{
