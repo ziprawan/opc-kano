@@ -65,7 +65,7 @@ func uploadMedias(c *messageutil.MessageContext, media types.DownloaderMedia) (*
 func DownloadHandler(c *messageutil.MessageContext) error {
 	url := c.Parser.RawArg.Content.Data
 	if len(url) == 0 {
-		c.QuoteReply("Give url (currently supports: instagram)")
+		c.QuoteReply("Give url (currently supports: instagram, tiktok, youtube[slow])")
 		return nil
 	}
 
