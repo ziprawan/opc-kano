@@ -94,6 +94,10 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 	"stkline": CommandHandler{
 		Func: StkLineHandler,
 	},
+	"download": CommandHandler{
+		Func:    DownloadHandler,
+		Aliases: []string{"down"},
+	},
 
 	// "jadwal": CommandHandler{
 	// 	Func:    Jadwal,
