@@ -96,7 +96,7 @@ func SawitAcceptChallenge(c *messageutil.MessageContext) error {
 				Text: proto.String(msg),
 				ContextInfo: &waE2E.ContextInfo{
 					StanzaID:    &sawitAttack.MessageId,
-					Participant: proto.String(c.Client.Store.GetLID().String()),
+					Participant: proto.String(c.Client.GetLID().String()),
 					QuotedMessage: &waE2E.Message{
 						Conversation: proto.String("This is placeholder message, if you are seeing this, maybe the replied message is too old."),
 					},
