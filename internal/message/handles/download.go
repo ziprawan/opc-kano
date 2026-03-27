@@ -6,6 +6,7 @@ import (
 	"kano/internal/utils/downloader/types"
 	"kano/internal/utils/messageutil"
 	"net/http"
+	"strings"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waCommon"
@@ -65,7 +66,12 @@ func uploadMedias(c *messageutil.MessageContext, media types.DownloaderMedia) (*
 func DownloadHandler(c *messageutil.MessageContext) error {
 	url := c.Parser.RawArg.Content.Data
 	if len(url) == 0 {
-		c.QuoteReply("Give url (currently supports: instagram, tiktok, youtube[slow])")
+		c.QuoteReply("Give url (currently supports: instagram, tiktok, youtube[pls don't])")
+		return nil
+	}
+
+	if strings.Contains(url, "youtube.com") || strings.Contains(url, "youtu.be") {
+		c.QuoteReply("Youtube support is currently dropped")
 		return nil
 	}
 
