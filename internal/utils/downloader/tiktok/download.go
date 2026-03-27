@@ -2,7 +2,6 @@ package tiktok
 
 import (
 	"fmt"
-	"io"
 	"kano/internal/utils/downloader/types"
 	ytdlpbind "kano/internal/utils/downloader/ytdlp-bind"
 	"net/url"
@@ -26,12 +25,7 @@ func Download(ctx *types.DownloaderContext, url *url.URL) error {
 		}
 		defer resp.Body.Close()
 
-		mergedBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		ctx.AddMedia(mergedBytes, true, res.Height, res.Width, float64(res.Duration))
+		ctx.AddMedia(resp.Body, true, fmt.Sprintf("video/%s", res.YtDlpFormat.Ext), res.Height, res.Width, float64(res.Duration))
 
 		caption := fmt.Sprintf(
 			"%s\n\nUploaded by: %s (%s)\n%d 👀 %d ❤️ %d 💬",

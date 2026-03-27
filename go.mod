@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/lib/pq v1.11.1
+	github.com/lrstanley/go-ytdlp v1.3.5
 	github.com/netresearch/go-cron v0.9.1
 	github.com/u2takey/ffmpeg-go v0.5.0
 	go.mau.fi/whatsmeow v0.0.0-20260129212019-7787ab952245
@@ -13,12 +14,11 @@ require (
 	gorm.io/gorm v1.31.1
 )
 
-require github.com/joho/godotenv v1.5.1 // indirect
+require github.com/joho/godotenv v1.5.1
 
 require (
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
-	github.com/lrstanley/go-ytdlp v1.3.5 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 )
 

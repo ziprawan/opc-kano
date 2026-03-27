@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kano/internal/config"
 	"kano/internal/utils/downloader/types"
 	"net/http"
 	"net/url"
@@ -19,78 +18,6 @@ type instagramRuling struct {
 	Title       string
 	Description string
 	Status      string
-}
-
-const instagram_encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-
-var instagram_table = map[uint8]int{}
-
-func instagramIdToPk(id string) uint64 {
-	if len(instagram_table) == 0 {
-		for i := range len(instagram_encoding) {
-			instagram_table[instagram_encoding[i]] = i
-		}
-	}
-
-	result, base := uint64(0), uint64(len(instagram_table))
-	for i := range len(id) {
-		result = (result * base) + uint64(instagram_table[id[i]])
-	}
-
-	return result
-}
-
-func instagramApiCheck(id string) (apiCheck instagramRuling, csrftoken string) {
-	// Create request
-	cli := http.Client{}
-	checkReq, err := instagramCreateReq(
-		fmt.Sprintf(
-			"https://i.instagram.com/api/v1/web/get_ruling_for_content/?content_type=MEDIA&target_id=%d",
-			instagramIdToPk(id),
-		),
-	)
-	if err != nil {
-		return
-	}
-
-	// Do the request and parse it
-	// If it is returned errors, just return empty struct
-	checkResp, err := cli.Do(checkReq)
-	if err == nil {
-		// Parse the response
-		json.NewDecoder(checkResp.Body).Decode(&apiCheck)
-		checkResp.Body.Close()
-
-		// Get csrf token from Set-Cookie
-		setCookies := checkResp.Cookies()
-		for _, cookie := range setCookies {
-			if cookie == nil {
-				continue
-			}
-
-			if cookie.Name == "csrftoken" {
-				csrftoken = cookie.Value
-			}
-		}
-	}
-
-	return
-}
-
-func instagramCreateReq(url string) (*http.Request, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return req, err
-	}
-
-	req.Header.Set("X-IG-App-ID", "936619743392459")
-	req.Header.Set("X-ASBD-ID", "198387")
-	req.Header.Set("X-IG-WWW-Claim", "0")
-	req.Header.Set("Origin", "https://www.instagram.com")
-	req.Header.Set("Accept", "*/*")
-	req.Header.Set("User-Agent", config.USER_AGENT)
-
-	return req, nil
 }
 
 func Download(ctx *types.DownloaderContext, igUrl *url.URL) error {
@@ -161,7 +88,7 @@ func Download(ctx *types.DownloaderContext, igUrl *url.URL) error {
 	return nil
 }
 
-func downloadMedia(url string) ([]byte, error) {
+func downloadMedia(url string, useTempFile bool) (io.ReadCloser, error) {
 	cli := http.Client{}
 	req, err := instagramCreateReq(url)
 	if err != nil {
@@ -171,22 +98,30 @@ func downloadMedia(url string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to do media request: %s", err)
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode > 299 {
 		return nil, fmt.Errorf("server responded with status %s", resp.Status)
 	}
 
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %s", err)
-	}
+	if useTempFile {
+		tmpFile, err := os.CreateTemp("", "temp_instagram_*")
+		if err != nil {
+			return nil, fmt.Errorf("failed to create temp file: %s", err)
+		}
+		_, err = io.Copy(tmpFile, resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to copy buffer into the temp file: %s", err)
+		}
+		resp.Body.Close()
 
-	return respBytes, nil
+		return tmpFile, nil
+	} else {
+		return resp.Body, nil
+	}
 }
 
-func mergeVideoAudio(vidBytes, audBytes []byte, vidId, audId string) ([]byte, error) {
-	tempdir, err := os.MkdirTemp("", "downloader_*")
+func mergeVideoAudio(vidReader, audReader io.ReadCloser, vidId, audId string) (io.ReadCloser, error) {
+	tempdir, err := os.MkdirTemp("", "downloader_instagram_*")
 	if err != nil {
 		return nil, err
 	}
@@ -195,18 +130,27 @@ func mergeVideoAudio(vidBytes, audBytes []byte, vidId, audId string) ([]byte, er
 	inputAud := fmt.Sprintf("%s/%s.mp4", tempdir, audId)
 	output := fmt.Sprintf("%s/%s_%s.mp4", tempdir, vidId, audId)
 
-	defer os.Remove(inputVid)
-	defer os.Remove(inputAud)
-	defer os.Remove(output)
+	vidFile, err := os.OpenFile(inputVid, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	if err != nil {
+		return nil, err
+	}
+	defer vidFile.Close()
+	_, err = io.Copy(vidFile, vidReader)
+	if err != nil {
+		return nil, err
+	}
+	vidFile.Close()
 
-	err = os.WriteFile(inputVid, vidBytes, 0644)
+	audFile, err := os.OpenFile(inputAud, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, err
 	}
-	err = os.WriteFile(inputAud, audBytes, 0644)
+	defer audFile.Close()
+	_, err = io.Copy(audFile, audReader)
 	if err != nil {
 		return nil, err
 	}
+	audFile.Close()
 
 	in1 := ffmpeg.Input(inputVid)
 	in2 := ffmpeg.Input(inputAud)
@@ -220,39 +164,49 @@ func mergeVideoAudio(vidBytes, audBytes []byte, vidId, audId string) ([]byte, er
 		return nil, err
 	}
 
-	mergedBytes, err := os.ReadFile(output)
+	fileReader, err := os.OpenFile(output, os.O_RDONLY, 0600)
 	if err != nil {
 		return nil, err
 	}
 
-	return mergedBytes, nil
+	return fileReader, nil
 }
 
 func processMedia(ctx *types.DownloaderContext, media igParsed_Media) error {
 	if media.IsVideo {
-		vidBytes, err := downloadMedia(media.Url)
+		vidBytes, err := downloadMedia(media.Url, false)
 		if err != nil {
 			return err
 		}
 
 		if media.AudioUrl != "" {
-			audBytes, err := downloadMedia(media.AudioUrl)
+			audBytes, err := downloadMedia(media.AudioUrl, false)
 			if err != nil {
 				return err
 			}
 
 			mergedBytes, err := mergeVideoAudio(vidBytes, audBytes, media.VideoId, media.AudioId)
-			ctx.AddMedia(mergedBytes, true, media.Dimensions.Height, media.Dimensions.Width, media.Duration)
+			ctx.AddMedia(mergedBytes, true, "video/mp4", media.Dimensions.Height, media.Dimensions.Width, media.Duration)
 		} else {
-			ctx.AddMedia(vidBytes, true, media.Dimensions.Height, media.Dimensions.Width, media.Duration)
+			ctx.AddMedia(vidBytes, true, "video/mp4", media.Dimensions.Height, media.Dimensions.Width, media.Duration)
 		}
 	} else {
-		imgBytes, err := downloadMedia(media.Url)
+		imgReader, err := downloadMedia(media.Url, true)
 		if err != nil {
 			return err
 		}
+		defer imgReader.Close()
+		imgSeeker, ok := imgReader.(io.ReadSeekCloser)
+		if !ok {
+			return fmt.Errorf("unable to infer imgReader into io.ReadSeekCloser")
+		}
+		first512Bytes := make([]byte, 512)
+		_, err = imgSeeker.Read(first512Bytes)
+		if err != nil {
+			return fmt.Errorf("failed to read first 512 bytes for content type detection: %s", err)
+		}
 
-		ctx.AddMedia(imgBytes, false, media.Dimensions.Height, media.Dimensions.Width, 0)
+		ctx.AddMedia(imgReader, false, http.DetectContentType(first512Bytes), media.Dimensions.Height, media.Dimensions.Width, 0)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"io"
 	"kano/internal/config"
 
 	"go.mau.fi/whatsmeow"
@@ -22,6 +23,10 @@ func (c *ClientContext) Download(msg whatsmeow.DownloadableMessage) ([]byte, err
 
 func (c *ClientContext) Upload(content []byte, mediaType whatsmeow.MediaType) (whatsmeow.UploadResponse, error) {
 	return c.client.Upload(context.Background(), content, mediaType)
+}
+
+func (c *ClientContext) UploadReader(plaintext io.Reader, appInfo whatsmeow.MediaType) (whatsmeow.UploadResponse, error) {
+	return c.client.UploadReader(context.Background(), plaintext, nil, appInfo)
 }
 
 func (c *ClientContext) GetGroupInfo(jid types.JID) (*types.GroupInfo, error) {

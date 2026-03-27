@@ -5,7 +5,6 @@ import (
 	"kano/internal/utils/downloader"
 	"kano/internal/utils/downloader/types"
 	"kano/internal/utils/messageutil"
-	"net/http"
 	"strings"
 
 	"go.mau.fi/whatsmeow"
@@ -17,17 +16,14 @@ import (
 func uploadMedias(c *messageutil.MessageContext, media types.DownloaderMedia) (*waE2E.Message, error) {
 	msg := &waE2E.Message{}
 
-	data, isVideo := media.GetData()
-	height, width, duration := media.GetDimensions()
+	isVideo, contentType, height, width, duration := media.GetMetadata()
 
-	contentType := http.DetectContentType(data)
-	fmt.Println("Got contentType:", contentType)
 	mediaType := whatsmeow.MediaImage
 	if isVideo {
 		mediaType = whatsmeow.MediaVideo
 	}
 
-	upResp, err := c.Client.Upload(data, mediaType)
+	upResp, err := c.Client.UploadReader(media, mediaType)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +143,7 @@ func DownloadHandler(c *messageutil.MessageContext) error {
 	}
 
 	if len(msgs) == 0 {
-		c.QuoteReply("No media found.")
+		c.QuoteReply("%s", caption)
 	} else if len(msgs) == 1 {
 		c.SendMessage(msgs[0])
 	} else {

@@ -79,12 +79,12 @@ func Download(ctx *types.DownloaderContext, url *url.URL) error {
 			return err
 		}
 
-		mergedBytes, err := os.ReadFile(output)
+		fileReader, err := os.OpenFile(output, os.O_RDONLY, 0600)
 		if err != nil {
 			return err
 		}
 
-		ctx.AddMedia(mergedBytes, true, res.Height, res.Width, float64(res.Duration))
+		ctx.AddMedia(fileReader, true, "video/mp4", res.Height, res.Width, float64(res.Duration))
 
 		caption := fmt.Sprintf(
 			"%s\n\n%s\n\nUploaded by: %s (%s) - %d 🫂\n%d 👀 %d ❤️ %d 💬",
