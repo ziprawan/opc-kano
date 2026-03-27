@@ -18,6 +18,8 @@ type igResponseGeneral struct {
 			Tagged  igResponse__Edges[igResponse__Node[igResponse__Tagged]]  `json:"edge_media_to_tagged_user"`
 		} `json:"xdt_shortcode_media"`
 	} `json:"data"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
 }
 
 type igResponse__Edges[T any] struct {

@@ -36,6 +36,10 @@ func parseGeneralInfo(data []byte) (igParsed, error) {
 		return igParsed{}, fmt.Errorf("failed to get graphql general info: %s", err)
 	}
 
+	if general.Status == "fail" {
+		return igParsed{}, fmt.Errorf("api returned error: %q", general.Message)
+	}
+
 	// Parse the common fields
 	res := igParsed{}
 	var caption strings.Builder
