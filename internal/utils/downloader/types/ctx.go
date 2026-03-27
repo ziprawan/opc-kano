@@ -42,11 +42,12 @@ func (d DownloaderContext) GetCaption() string {
 
 func (d *DownloaderContext) AddMedia(reader io.Reader, isVideo bool, contentType string, height, width int, duration float64) {
 	d.medias = append(d.medias, DownloaderMedia{
-		reader:   reader,
-		isVideo:  isVideo,
-		height:   height,
-		width:    width,
-		duration: duration,
+		reader:      reader,
+		isVideo:     isVideo,
+		contentType: contentType,
+		height:      height,
+		width:       width,
+		duration:    duration,
 	})
 }
 

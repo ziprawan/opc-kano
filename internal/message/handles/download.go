@@ -147,6 +147,7 @@ func DownloadHandler(c *messageutil.MessageContext) error {
 	if len(msgs) == 0 {
 		c.QuoteReply("%s", caption)
 	} else if len(msgs) == 1 {
+		msgs[0].MessageContextInfo.MessageAssociation = nil
 		c.SendMessage(msgs[0])
 	} else {
 		c.SendMessage(&waE2E.Message{
