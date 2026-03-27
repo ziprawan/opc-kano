@@ -14,6 +14,8 @@ import (
 )
 
 func uploadMedias(c *messageutil.MessageContext, media types.DownloaderMedia) (*waE2E.Message, error) {
+	defer media.Close()
+
 	msg := &waE2E.Message{}
 
 	isVideo, contentType, height, width, duration := media.GetMetadata()

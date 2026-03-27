@@ -17,8 +17,15 @@ type DownloaderMedia struct {
 	duration float64
 }
 
-func (d DownloaderMedia) Read(p []byte) (n int, err error) {
+func (d DownloaderMedia) Read(p []byte) (int, error) {
 	return d.reader.Read(p)
+}
+
+func (d DownloaderMedia) Close() error {
+	if closer, ok := d.reader.(io.Closer); ok {
+		return closer.Close()
+	}
+	return nil
 }
 
 func (d DownloaderMedia) GetMetadata() (bool, string, uint32, uint32, uint32) {
