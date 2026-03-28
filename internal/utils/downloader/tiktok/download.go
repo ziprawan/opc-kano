@@ -23,7 +23,6 @@ func Download(ctx *types.DownloaderContext, url *url.URL) error {
 		if err != nil {
 			return err
 		}
-		defer resp.Body.Close()
 
 		ctx.AddMedia(resp.Body, true, fmt.Sprintf("video/%s", res.YtDlpFormat.Ext), res.Height, res.Width, float64(res.Duration))
 
