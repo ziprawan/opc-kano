@@ -72,20 +72,29 @@ func Rgsi(c *messageutil.MessageContext) error {
 
 		cli := http.Client{}
 
-		done := make(chan struct{})
-		var resp *http.Response
+		type fresult struct {
+			resp *http.Response
+			err  error
+		}
+
+		resCh := make(chan fresult)
 
 		go func() {
-			resp, err = cli.Do(req)
-			close(done)
+			resp, err := cli.Do(req)
+			resCh <- fresult{resp: resp, err: err}
 		}()
 
+		var resp *http.Response
+
 		select {
-		case <-done:
-			// finished (success or error)
+		case res := <-resCh:
+			resp = res.resp
+			err = res.err
 		case <-time.After(10 * time.Second):
 			c.QuoteReply("It seems the request is taking longer than expected, please wait")
-			<-done
+			res := <-resCh
+			resp = res.resp
+			err = res.err
 		}
 
 		// ---- check result ----
