@@ -94,11 +94,11 @@ func Rgsi(c *messageutil.MessageContext) error {
 				c.QuoteReply("Request failed after %d attempts: %v", attempt, err)
 				return err
 			}
+			if resp != nil {
+				resp.Body.Close()
+			}
+			c.QuoteReply("Request failed, retrying... (%d/5)", attempt)
 			continue // retry
-		}
-
-		if resp != nil {
-			resp.Body.Close()
 		}
 
 		if resp.StatusCode == 504 {
@@ -106,6 +106,10 @@ func Rgsi(c *messageutil.MessageContext) error {
 				c.QuoteReply("API keeps returning 504 after %d attempts", attempt)
 				return nil
 			}
+			if resp != nil {
+				resp.Body.Close()
+			}
+			c.QuoteReply("Request failed, retrying... (%d/5)", attempt)
 			continue // retry
 		}
 
