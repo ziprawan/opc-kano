@@ -56,33 +56,35 @@ func initMajorConstraints(scheds []SemesterSubject) error {
 	}
 
 	missing := len(rawMajorConstraints) - len(found)
-	fmt.Printf("Missing %d room(s) from database\n", missing)
-	toInsert := make([]models.ConstraintMajor, missing)
-	i := 0
-	for _, cm := range ors {
-		if !slices.ContainsFunc(found, func(a models.ConstraintMajor) bool {
-			return a.MajorID == cm.MajorID && a.AddonData == cm.AddonData
-		}) {
-			toInsert[i] = cm
+	if missing > 0 {
+		fmt.Printf("Missing %d room(s) from database\n", missing)
+		toInsert := make([]models.ConstraintMajor, missing)
+		i := 0
+		for _, cm := range ors {
+			if !slices.ContainsFunc(found, func(a models.ConstraintMajor) bool {
+				return a.MajorID == cm.MajorID && a.AddonData == cm.AddonData
+			}) {
+				toInsert[i] = cm
+				i++
+			}
+		}
+
+		tx = db.Create(&toInsert)
+		if tx.Error != nil {
+			return tx.Error
+		}
+		fmt.Printf("Inserted %d room(s) into database\n", tx.RowsAffected)
+
+		majorConstraints = make([]models.ConstraintMajor, len(rawMajorConstraints))
+		i = 0
+		for _, f := range found {
+			majorConstraints[i] = f
 			i++
 		}
-	}
-
-	tx = db.Create(&toInsert)
-	if tx.Error != nil {
-		return tx.Error
-	}
-	fmt.Printf("Inserted %d room(s) into database\n", tx.RowsAffected)
-
-	majorConstraints = make([]models.ConstraintMajor, len(rawMajorConstraints))
-	i = 0
-	for _, f := range found {
-		majorConstraints[i] = f
-		i++
-	}
-	for _, in := range toInsert {
-		majorConstraints[i] = in
-		i++
+		for _, in := range toInsert {
+			majorConstraints[i] = in
+			i++
+		}
 	}
 
 	return nil
