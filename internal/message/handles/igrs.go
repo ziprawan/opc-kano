@@ -43,7 +43,7 @@ type rgsiResponse struct {
 }
 
 func rgsiApi() string {
-	return "https://" + word.FromBase64("c2VtYWcvY2lsYnVwL2RpLnNyZ2kuaXBh")
+	return "https://" + word.Reverse(word.FromBase64("c2VtYWcvY2lsYnVwL2RpLnNyZ2kuaXBh"))
 }
 
 func Rgsi(c *messageutil.MessageContext) error {
@@ -62,7 +62,7 @@ func Rgsi(c *messageutil.MessageContext) error {
 		c.QuoteReply("Internal error while creating request object")
 		return err
 	}
-	req.Header.Set("Origin", "https://"+word.FromBase64("ZGkuc3JnaQ"))
+	req.Header.Set("Origin", "https://"+word.Reverse(word.FromBase64("ZGkuc3JnaQ")))
 	req.Header.Set("User-Agent", config.USER_AGENT)
 
 	q := req.URL.Query()
@@ -72,7 +72,9 @@ func Rgsi(c *messageutil.MessageContext) error {
 
 	req.URL.RawQuery = q.Encode()
 
-	cli := http.Client{}
+	cli := http.Client{
+		Timeout: 30 * time.Second,
+	}
 
 	go func() {
 		resp, err = cli.Do(req)
