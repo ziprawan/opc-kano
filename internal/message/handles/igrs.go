@@ -173,6 +173,8 @@ func Rgsi(c *messageutil.MessageContext) error {
 				fmt.Fprintf(&builder, "*Descriptors:*\n%s\n", strings.Join(descriptors, "\n"))
 			}
 
+			fmt.Fprintf(&builder, "Related URLs: %s - %s\n", game.InGameUrl, game.VideoUrl)
+
 			infoStrs[i] = builder.String()
 		}
 
