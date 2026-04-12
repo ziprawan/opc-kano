@@ -101,6 +101,9 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 	"igrs": CommandHandler{
 		Func: Rgsi,
 	},
+	"igrs-id": CommandHandler{
+		Func: RgsiId,
+	},
 
 	// "jadwal": CommandHandler{
 	// 	Func:    Jadwal,
