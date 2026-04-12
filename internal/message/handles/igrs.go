@@ -62,7 +62,7 @@ func Rgsi(c *messageutil.MessageContext) error {
 		c.QuoteReply("Internal error while creating request object")
 		return err
 	}
-	req.Header.Set("Origin", "https://"+word.Reverse(word.FromBase64("ZGkuc3JnaQ")))
+	// req.Header.Set("Origin", "https://"+word.Reverse(word.FromBase64("ZGkuc3JnaQ")))
 	req.Header.Set("User-Agent", config.USER_AGENT)
 
 	q := req.URL.Query()
@@ -83,8 +83,8 @@ func Rgsi(c *messageutil.MessageContext) error {
 
 	select {
 	case <-done:
-		// Just continue it blud
-	case <-time.After(5 * time.Second):
+		fmt.Println("Done")
+	case <-time.After(10 * time.Second):
 		c.QuoteReply("It seems the request is taking longer than expected, please wait")
 		<-done
 	}
@@ -123,7 +123,7 @@ func Rgsi(c *messageutil.MessageContext) error {
 		if len(game.Ratings) > 0 {
 			ratings := make([]string, len(game.Ratings))
 			for j, rating := range game.Ratings {
-				if rating.Enabled {
+				if !rating.Enabled {
 					ratings[j] = fmt.Sprintf("~%s~", rating.Name)
 				} else {
 					ratings[j] = rating.Name
@@ -135,7 +135,7 @@ func Rgsi(c *messageutil.MessageContext) error {
 		if len(game.Descriptors) > 0 {
 			descriptors := make([]string, len(game.Descriptors))
 			for j, desc := range game.Descriptors {
-				if desc.Enabled {
+				if !desc.Enabled {
 					descriptors[j] = fmt.Sprintf("- ~%s~", desc.Name)
 				} else {
 					descriptors[j] = fmt.Sprintf("- %s", desc.Name)
@@ -147,7 +147,7 @@ func Rgsi(c *messageutil.MessageContext) error {
 		infoStrs[i] = builder.String()
 	}
 
-	c.QuoteReply("%s", strings.Join(infoStrs, "\n====\n"))
+	c.QuoteReply("%s", strings.Join(infoStrs, "\n====\n\n"))
 
 	return nil
 }
