@@ -94,6 +94,11 @@ func Rgsi(c *messageutil.MessageContext) error {
 		return err
 	}
 
+	if resp.StatusCode > 299 {
+		c.QuoteReply("API returned %s", resp.Status)
+		return nil
+	}
+
 	var jsResp rgsiResponse
 	err = json.NewDecoder(resp.Body).Decode(&jsResp)
 	if err != nil {
