@@ -98,11 +98,8 @@ var HANDLES CommandHandlerFuncMap = CommandHandlerFuncMap{
 		Func:    DownloadHandler,
 		Aliases: []string{"down"},
 	},
-	"igrs": CommandHandler{
-		Func: Rgsi,
-	},
-	"igrs-id": CommandHandler{
-		Func: RgsiId,
+	"rg": CommandHandler{
+		Func: RefreshGroups,
 	},
 
 	// "jadwal": CommandHandler{
