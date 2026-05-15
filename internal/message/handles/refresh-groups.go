@@ -38,6 +38,7 @@ func RefreshGroups(c *messageutil.MessageContext) error {
 		}
 
 		grp.Name = grpInfo.Name
+		db.Save(&grp)
 
 		parts := grpInfo.Participants
 		for _, part := range parts {
@@ -63,19 +64,21 @@ func RefreshGroups(c *messageutil.MessageContext) error {
 			}
 
 			if idx == -1 {
-				tx = db.Create(model)
+				tx = db.Create(&model)
 				if tx.Error != nil {
 					c.QuoteReply("Failed to save participant with contact %s group %s: %s", contact.JID, grp.JID, tx.Error)
 				}
 			} else {
 				model.ID = dbParts[idx].ID
-				tx = db.Save(model)
+				tx = db.Save(&model)
 				if tx.Error != nil {
 					c.QuoteReply("Failed to update participant with contact %s group %s: %s", contact.JID, grp.JID, tx.Error)
 				}
 			}
 		}
 	}
+
+	c.QuoteReply("Done")
 
 	return nil
 }
