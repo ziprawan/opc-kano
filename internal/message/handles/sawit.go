@@ -42,6 +42,10 @@ func SawitHandler(c *messageutil.MessageContext) error {
 			c.QuoteReply("Invalid transfer amount")
 			return nil
 		}
+		if transferAmt >= (1 << 63) {
+			c.QuoteReply("Invalid transfer amount")
+			return nil
+		}
 		targetJID := args[2].Content.Data[1:]
 		return sawit.Transfer(c, uint(transferAmt), targetJID)
 	default:
