@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"kano/internal/utils/downloader/instagram"
 	"kano/internal/utils/downloader/tiktok"
+	"kano/internal/utils/downloader/twitter"
 	"kano/internal/utils/downloader/types"
 	"kano/internal/utils/downloader/youtube"
 	"net/url"
@@ -36,6 +37,12 @@ func Download(urlStr string) (types.DownloaderContext, error) {
 		err = tiktok.Download(&ctx, u)
 		if err != nil {
 			return ctx, fmt.Errorf("tiktok: %s", err)
+		}
+		return ctx, nil
+	case "www.twitter.com", "twitter.com", "x.com", "www.x.com":
+		err = twitter.Download(&ctx, u)
+		if err != nil {
+			return ctx, fmt.Errorf("twitter: %s", err)
 		}
 		return ctx, nil
 	default:
