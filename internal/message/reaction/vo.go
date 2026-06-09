@@ -50,7 +50,6 @@ func downloadMediaFromVoRequest(c *messageutil.MessageContext, req models.VoRequ
 			url,
 			[]byte(word.FromBase64(req.MediaKey)),
 			mediaType,
-			-1,
 			[]byte(word.FromBase64(req.FileEncSha256)),
 			[]byte(word.FromBase64(req.FileSha256)),
 		)
@@ -61,9 +60,9 @@ func downloadMediaFromVoRequest(c *messageutil.MessageContext, req models.VoRequ
 			[]byte(word.FromBase64(req.FileEncSha256)),
 			[]byte(word.FromBase64(req.FileSha256)),
 			[]byte(word.FromBase64(req.MediaKey)),
-			-1,
 			mediaType,
 			mediaTypeToMMSType[mediaType],
+			false,
 		)
 	} else {
 		return nil, whatsmeow.ErrNoURLPresent
