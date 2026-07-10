@@ -90,9 +90,6 @@ func fetch(url string) (*http.Response, error) {
 }
 
 func Search(query string) (*DiddySearchResult, error) {
-	// key := config.GetConfig().PddiktiKey
-	// iv := config.GetConfig().PddiktiIv
-
 	url := BASE_URL + url.PathEscape(query)
 	resp, err := fetch(url)
 	if err != nil {
@@ -107,16 +104,12 @@ func Search(query string) (*DiddySearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	// decrypted, err := decryptSearchResult(body, key, iv)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
-	var res DiddySearchResult
+	var res DiddyResponse
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	return &res, nil
+	return &res.Data, nil
 }

@@ -42,6 +42,11 @@ type DiddySearchResult struct {
 	Prodi     []DiddyStud `json:"prodi"`
 }
 
+type DiddyResponse struct {
+	Status string            `json:"status"`
+	Data   DiddySearchResult `json:"data"`
+}
+
 func (d DiddySearchResult) TotalLength() uint {
 	return uint(len(d.Mahasiswa) + len(d.Dosen) + len(d.PT) + len(d.Prodi))
 }
