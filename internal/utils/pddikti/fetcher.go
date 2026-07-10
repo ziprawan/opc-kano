@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"kano/internal/config"
 	"net/http"
 	"net/url"
 	"strings"
@@ -91,8 +90,8 @@ func fetch(url string) (*http.Response, error) {
 }
 
 func Search(query string) (*DiddySearchResult, error) {
-	key := config.GetConfig().PddiktiKey
-	iv := config.GetConfig().PddiktiIv
+	// key := config.GetConfig().PddiktiKey
+	// iv := config.GetConfig().PddiktiIv
 
 	url := BASE_URL + url.PathEscape(query)
 	resp, err := fetch(url)
