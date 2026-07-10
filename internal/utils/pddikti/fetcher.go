@@ -16,7 +16,7 @@ import (
 
 var ErrNoKeyOrIv = errors.New("no specified key or iv")
 
-var BASE_URL string = string([]byte{104, 116, 116, 112, 115, 58, 47, 47, 97, 112, 105, 45, 112, 100, 100, 105, 107, 116, 105, 46, 107, 101, 109, 100, 105, 107, 116, 105, 115, 97, 105, 110, 116, 101, 107, 46, 103, 111, 46, 105, 100, 47, 112, 101, 110, 99, 97, 114, 105, 97, 110, 47, 101, 110, 99, 47, 97, 108, 108, 47})
+var BASE_URL string = string([]byte{104, 116, 116, 112, 115, 58, 47, 47, 97, 112, 105, 45, 112, 100, 100, 105, 107, 116, 105, 46, 107, 101, 109, 100, 105, 107, 116, 105, 115, 97, 105, 110, 116, 101, 107, 46, 103, 111, 46, 105, 100, 47, 112, 101, 110, 99, 97, 114, 105, 97, 110, 47, 97, 108, 108, 47})
 
 func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 	if len(data) == 0 {
@@ -108,13 +108,13 @@ func Search(query string) (*DiddySearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	decrypted, err := decryptSearchResult(body, key, iv)
-	if err != nil {
-		return nil, err
-	}
+	// decrypted, err := decryptSearchResult(body, key, iv)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	var res DiddySearchResult
-	err = json.Unmarshal(decrypted, &res)
+	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return nil, err
 	}
