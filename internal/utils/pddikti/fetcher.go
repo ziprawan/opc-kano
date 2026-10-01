@@ -15,7 +15,7 @@ import (
 
 var ErrNoKeyOrIv = errors.New("no specified key or iv")
 
-var BASE_URL string = string([]byte{104, 116, 116, 112, 115, 58, 47, 47, 112, 100, 100, 105, 107, 116, 105, 46, 107, 101, 109, 100, 105, 107, 116, 105, 115, 97, 105, 110, 116, 101, 107, 46, 103, 111, 46, 105, 100, 47, 97, 112, 105, 47, 112, 101, 110, 99, 97, 114, 105, 97, 110, 47, 101, 110, 99, 47, 97, 108, 108})
+var BASE_URL string = string([]byte{104, 116, 116, 112, 115, 58, 47, 47, 112, 100, 100, 105, 107, 116, 105, 46, 107, 101, 109, 100, 105, 107, 116, 105, 115, 97, 105, 110, 116, 101, 107, 46, 103, 111, 46, 105, 100, 47, 97, 112, 105, 47, 112, 101, 110, 99, 97, 114, 105, 97, 110, 47, 101, 110, 99, 47, 97, 108, 108, 47})
 
 func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 	if len(data) == 0 {
@@ -75,7 +75,7 @@ func buildUrl(path ...string) string {
 }
 
 func fetch(url string) (*http.Response, error) {
-	origUrl := BASE_URL[:8] + BASE_URL[12:41]
+	origUrl := BASE_URL[:38]
 
 	client := http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
